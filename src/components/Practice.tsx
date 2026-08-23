@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { levelLabel, scenarioLabel } from "../data/catalog";
 import { SCENE_ART } from "../data/scenes";
-import { answersOf, checkSlots, emptySlots } from "../lib/check";
+import { answerSlots, answersOf, checkSlots, emptySlots } from "../lib/check";
 import { nextSentence } from "../lib/pool";
 import { loadDoneIds, saveDoneIds } from "../lib/progress";
 import { playCheckFx, playNextFx } from "../lib/fx";
+import { localHint, lookupHint, withRoles, type WordHint } from "../lib/wordHint";
 import { speakEnglish, stopSpeech } from "../lib/speech";
 import { useListen } from "../lib/useSpeech";
 import type { Sentence, SlotCheck } from "../types";
@@ -15,6 +16,40 @@ import { AnswerWords } from "./AnswerWords";
 import { NotesPanel } from "./NotesPanel";
 import { Paywall } from "./Paywall";
 import { WordBlanks } from "./WordBlanks";
+
+function ZhLine({ text }: { text: string }) {
+  const boxRef = useRef<HTMLHeadingElement>(null);
+  const textRef = useRef<HTMLSpanElement>(null);
+
+  useLayoutEffect(() => {
+    const box = boxRef.current;
+    const inner = textRef.current;
+    if (!box || !inner) return;
+
+    const fit = () => {
+      inner.style.transform = "scale(1)";
+      const scale = Math.min(
+        1,
+        box.clientWidth / Math.max(inner.scrollWidth, 1),
+        box.clientHeight / Math.max(inner.scrollHeight, 1),
+      );
+      inner.style.transform = `scale(${scale})`;
+    };
+
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(box);
+    return () => observer.disconnect();
+  }, [text]);
+
+  return (
+    <h1 ref={boxRef} className="zh-line">
+      <span ref={textRef} className="zh-line-fit">
+        {text}
+      </span>
+    </h1>
+  );
+}
 
 interface PracticeProps {
   pool: Sentence[];
@@ -33,6 +68,7 @@ export function Practice({ pool, access, onBack }: PracticeProps) {
   const [revealed, setRevealed] = useState(false);
   const [shake, setShake] = useState(false);
   const [listenFirst, setListenFirst] = useState(false);
+  const [hints, setHints] = useState<WordHint[] | undefined>();
   const holdEnter = useRef(false);
   const listen = useListen(sentence.en);
   const doneCount = Math.min(doneIds.size, pool.length);
@@ -58,6 +94,23 @@ export function Practice({ pool, access, onBack }: PracticeProps) {
     window.addEventListener("keyup", release);
     return () => window.removeEventListener("keyup", release);
   }, []);
+
+  useEffect(() => {
+    if (!result) {
+      setHints(undefined);
+      return;
+    }
+    const slots = answerSlots(sentence.en);
+    const vocab = sentence.notes.vocab;
+    setHints(withRoles(slots, slots.map((word) => localHint(word, vocab))));
+    let alive = true;
+    void Promise.all(slots.map((word) => lookupHint(word, vocab))).then((next) => {
+      if (alive) setHints(withRoles(slots, next));
+    });
+    return () => {
+      alive = false;
+    };
+  }, [result, sentence.en, sentence.notes.vocab]);
 
   const refresh = () => {
     if (access.expired) return;
@@ -142,7 +195,7 @@ export function Practice({ pool, access, onBack }: PracticeProps) {
         </div>
       </div>
       <section className="panel prompt-card">
-        <h1 className="zh-line">{sentence.zh}</h1>
+        <ZhLine text={sentence.zh} />
         <div className="action-row">
           <button
             type="button"
@@ -175,6 +228,7 @@ export function Practice({ pool, access, onBack }: PracticeProps) {
           shake={shake}
           autoFocus
           isCorrect={result?.correct === true}
+          hints={hints}
           onChange={(next) => {
             setValues(next);
             setResult(null);

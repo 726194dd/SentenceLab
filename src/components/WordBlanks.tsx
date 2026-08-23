@@ -1,6 +1,38 @@
-import { useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { answerSlots } from "../lib/check";
+import { posTone, type WordHint } from "../lib/wordHint";
 import type { SlotMark } from "../types";
+
+function FitHint({ className, text }: { className: string; text: string }) {
+  const boxRef = useRef<HTMLSpanElement>(null);
+  const textRef = useRef<HTMLSpanElement>(null);
+
+  useLayoutEffect(() => {
+    const box = boxRef.current;
+    const inner = textRef.current;
+    if (!box || !inner) return;
+
+    const fit = () => {
+      inner.style.transform = "scale(1)";
+      const avail = box.clientWidth;
+      const need = inner.scrollWidth;
+      inner.style.transform = `scale(${need > avail && need > 0 ? avail / need : 1})`;
+    };
+
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(box);
+    return () => observer.disconnect();
+  }, [text]);
+
+  return (
+    <span ref={boxRef} className={className}>
+      <span ref={textRef} className="hint-fit">
+        {text}
+      </span>
+    </span>
+  );
+}
 
 interface WordBlanksProps {
   target: string;
@@ -10,6 +42,7 @@ interface WordBlanksProps {
   compact?: boolean;
   shake?: boolean;
   isCorrect?: boolean;
+  hints?: WordHint[];
   onChange: (values: string[]) => void;
   onSubmit: () => void;
 }
@@ -22,6 +55,7 @@ export function WordBlanks({
   compact = false,
   shake = false,
   isCorrect = false,
+  hints,
   onChange,
   onSubmit,
 }: WordBlanksProps) {
@@ -40,16 +74,23 @@ export function WordBlanks({
 
   return (
     <div
-      className={`word-blanks ${compact ? "compact" : ""} ${shake ? "is-shake" : ""}`}
+      className={`word-blanks ${compact ? "compact" : ""} ${shake ? "is-shake" : ""} ${!compact ? "has-slots" : ""}`}
       role="group"
       aria-label="按词填写英文"
     >
       {slots.map((word, index) => {
         const mark = marks[index] ?? "idle";
         const typed = values[index] ?? "";
-        const measure = typed.length > word.length ? typed : word;
+        const measure = compact && typed.length > word.length ? typed : word;
+        const hint = hints?.[index];
         return (
-          <label key={`${word}-${index}`} className={`word-blank ${mark}`}>
+          <label key={`${word}-${index}`} className={`word-blank ${mark} ${compact ? "" : "is-hint"}`}>
+            {compact ? null : (
+              <span className={`word-pos-pill ${hint?.pos ? `pos-${posTone(hint.pos)}` : "is-empty"}`}>
+                <span className="word-pos-label">{hint?.pos || "词"}</span>
+              </span>
+            )}
+            <span className="word-blank-body">
             <span className="word-blank-measure" aria-hidden>
               {measure}
             </span>
@@ -126,6 +167,9 @@ export function WordBlanks({
                 }
               }}
             />
+            </span>
+            {compact ? null : <FitHint className="word-blank-ipa" text={hint?.phonetic || "\u00a0"} />}
+            {compact ? null : <FitHint className="word-blank-zh" text={hint?.zh || "\u00a0"} />}
           </label>
         );
       })}
