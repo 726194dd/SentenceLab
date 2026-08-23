@@ -351,31 +351,17 @@ h3 {
   flex-wrap: wrap;
 }
 
-.category-progress {
-  width: min(420px, 100%);
+.practice-stats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 18px;
+  width: min(560px, 100%);
   margin: 0 auto 18px;
-}
-
-.category-progress-label {
   color: var(--muted);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: var(--font-body);
   text-align: center;
-  margin-bottom: 8px;
-}
-
-.category-progress-track {
-  height: 8px;
-  border-radius: 999px;
-  background: var(--sand);
-  overflow: hidden;
-}
-
-.category-progress-fill {
-  height: 100%;
-  border-radius: inherit;
-  background: var(--sage);
-  transition: width 220ms ease;
 }
 
 .crumbs {
@@ -1149,6 +1135,27 @@ h3 {
   .action-row {
     margin: 14px 0 6px;
     gap: 8px;
+  }
+
+  .action-row.tools {
+    flex-wrap: nowrap;
+    gap: 6px;
+    margin: 10px 0 6px;
+  }
+
+  .action-row.tools .btn {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 32px;
+    padding: 5px 8px;
+    font-size: 13px;
+    gap: 4px;
+  }
+
+  .action-row.tools .btn svg {
+    width: 13px;
+    height: 13px;
+    flex: 0 0 auto;
   }
 
   .btn {

@@ -3,7 +3,7 @@ import { levelLabel, scenarioLabel } from "../data/catalog";
 import { SCENE_ART } from "../data/scenes";
 import { answerSlots, answersOf, checkSlots, emptySlots } from "../lib/check";
 import { nextSentence } from "../lib/pool";
-import { loadDoneIds, saveDoneIds } from "../lib/progress";
+import { loadCheckStats, loadDoneIds, saveCheckStats, saveDoneIds } from "../lib/progress";
 import { playCheckFx, playNextFx } from "../lib/fx";
 import { localHint, lookupHint, withRoles, type WordHint } from "../lib/wordHint";
 import { speakEnglish, stopSpeech } from "../lib/speech";
@@ -69,10 +69,15 @@ export function Practice({ pool, access, onBack }: PracticeProps) {
   const [shake, setShake] = useState(false);
   const [listenFirst, setListenFirst] = useState(false);
   const [hints, setHints] = useState<WordHint[] | undefined>();
+  const [stats, setStats] = useState(() =>
+    seed ? loadCheckStats(seed.level, seed.scenario) : { correct: 0, wrong: 0 },
+  );
   const holdEnter = useRef(false);
   const listen = useListen(sentence.en);
   const doneCount = Math.min(doneIds.size, pool.length);
-  const progressPct = pool.length === 0 ? 0 : Math.round((doneCount / pool.length) * 100);
+  const questionNo = Math.min(pool.length, doneIds.has(sentence.id) ? doneCount : doneCount + 1);
+  const attempted = stats.correct + stats.wrong;
+  const accuracy = attempted === 0 ? 0 : Math.round((stats.correct / attempted) * 100);
 
   const answers = useMemo(() => answersOf(sentence), [sentence]);
   const marks = result?.marks ?? values.map(() => "idle" as const);
@@ -140,6 +145,13 @@ export function Practice({ pool, access, onBack }: PracticeProps) {
       return;
     }
     const next = checkSlots(values, answers);
+    if (!result && seed) {
+      const counted = next.correct
+        ? { correct: stats.correct + 1, wrong: stats.wrong }
+        : { correct: stats.correct, wrong: stats.wrong + 1 };
+      setStats(counted);
+      saveCheckStats(seed.level, seed.scenario, counted);
+    }
     setResult(next);
     playCheckFx(next.correct);
     if (next.correct) {
@@ -164,7 +176,7 @@ export function Practice({ pool, access, onBack }: PracticeProps) {
           </button>
           <span className="chip">{levelLabel(sentence.level)}</span>
           <span className="chip">{scenarioLabel(sentence.scenario)}</span>
-          <span className="chip">本类 {pool.length} 句</span>
+          <span className="chip">第 {questionNo} 题 / 共 {pool.length} 题</span>
           {!access.unlocked && !access.expired ? (
             <span className="chip trial-clock">{access.clock}</span>
           ) : null}
@@ -183,20 +195,14 @@ export function Practice({ pool, access, onBack }: PracticeProps) {
       </div>
 
       <div className={`app-shell ${revealed ? "" : "stage"}`}>
-      <div
-        className="category-progress"
-        aria-label={`本类进度 ${doneCount} / ${pool.length}`}
-      >
-        <div className="category-progress-label">
-          进度 {doneCount} / {pool.length}
-        </div>
-        <div className="category-progress-track">
-          <div className="category-progress-fill" style={{ width: `${progressPct}%` }} />
-        </div>
+      <div className="practice-stats" aria-label="答题统计">
+        <span>已答对 {stats.correct}</span>
+        <span>已答错 {stats.wrong}</span>
+        <span>实时正确率 {accuracy}%</span>
       </div>
       <section className="panel prompt-card">
         <ZhLine text={sentence.zh} />
-        <div className="action-row">
+        <div className="action-row tools">
           <button
             type="button"
             className="btn btn-soft"
