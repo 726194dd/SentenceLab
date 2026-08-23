@@ -44,6 +44,20 @@ export function IconEye() {
   );
 }
 
+export function IconStar({ filled = false }: { filled?: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill={filled ? "currentColor" : "none"}
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+        d="M12 3.8 14.6 9l5.6.8-4.1 4 1 5.5L12 16.7 6.9 19.3l1-5.5-4.1-4L9.4 9 12 3.8z"
+      />
+    </svg>
+  );
+}
+
 export function IconCheck() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">

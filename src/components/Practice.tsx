@@ -3,6 +3,7 @@ import { levelLabel, scenarioLabel } from "../data/catalog";
 import { SCENE_ART } from "../data/scenes";
 import { answerSlots, answersOf, checkSlots, emptySlots } from "../lib/check";
 import { nextSentence } from "../lib/pool";
+import { loadFavoriteIds, toggleFavorite } from "../lib/favorites";
 import { loadCheckStats, loadDoneIds, saveCheckStats, saveDoneIds } from "../lib/progress";
 import { playCheckFx, playNextFx } from "../lib/fx";
 import { localHint, lookupHint, withRoles, type WordHint } from "../lib/wordHint";
@@ -11,7 +12,7 @@ import { useListen } from "../lib/useSpeech";
 import type { Sentence, SlotCheck } from "../types";
 import type { useAccess } from "../lib/useAccess";
 import { DrillList } from "./DrillList";
-import { IconCheck, IconEye, IconRefresh, IconSpeaker } from "./Icons";
+import { IconCheck, IconEye, IconRefresh, IconSpeaker, IconStar } from "./Icons";
 import { AnswerWords } from "./AnswerWords";
 import { NotesPanel } from "./NotesPanel";
 import { Paywall } from "./Paywall";
@@ -28,10 +29,15 @@ function ZhLine({ text }: { text: string }) {
 
     const fit = () => {
       inner.style.transform = "scale(1)";
+      const styles = getComputedStyle(box);
+      const availW =
+        box.clientWidth - parseFloat(styles.paddingLeft) - parseFloat(styles.paddingRight);
+      const availH =
+        box.clientHeight - parseFloat(styles.paddingTop) - parseFloat(styles.paddingBottom);
       const scale = Math.min(
         1,
-        box.clientWidth / Math.max(inner.scrollWidth, 1),
-        box.clientHeight / Math.max(inner.scrollHeight, 1),
+        availW / Math.max(inner.scrollWidth, 1),
+        availH / Math.max(inner.scrollHeight, 1),
       );
       inner.style.transform = `scale(${scale})`;
     };
@@ -54,24 +60,35 @@ function ZhLine({ text }: { text: string }) {
 interface PracticeProps {
   pool: Sentence[];
   access: ReturnType<typeof useAccess>;
+  startId?: string;
+  storageLevel?: string;
+  storageScenario?: string;
   onBack: () => void;
 }
 
-export function Practice({ pool, access, onBack }: PracticeProps) {
+export function Practice({
+  pool,
+  access,
+  startId,
+  storageLevel,
+  storageScenario,
+  onBack,
+}: PracticeProps) {
   const seed = pool[0];
-  const [doneIds, setDoneIds] = useState(() =>
-    seed ? loadDoneIds(seed.level, seed.scenario) : new Set<string>(),
+  const storeLevel = storageLevel ?? seed?.level ?? "A1";
+  const storeScenario = storageScenario ?? seed?.scenario ?? "daily";
+  const [doneIds, setDoneIds] = useState(() => loadDoneIds(storeLevel, storeScenario));
+  const [saved, setSaved] = useState(() => loadFavoriteIds());
+  const [sentence, setSentence] = useState<Sentence>(
+    () => pool.find((item) => item.id === startId) ?? nextSentence(pool, undefined, doneIds)!,
   );
-  const [sentence, setSentence] = useState<Sentence>(() => nextSentence(pool, undefined, doneIds)!);
   const [values, setValues] = useState(() => emptySlots(sentence.en));
   const [result, setResult] = useState<SlotCheck | null>(null);
   const [revealed, setRevealed] = useState(false);
   const [shake, setShake] = useState(false);
   const [listenFirst, setListenFirst] = useState(false);
   const [hints, setHints] = useState<WordHint[] | undefined>();
-  const [stats, setStats] = useState(() =>
-    seed ? loadCheckStats(seed.level, seed.scenario) : { correct: 0, wrong: 0 },
-  );
+  const [stats, setStats] = useState(() => loadCheckStats(storeLevel, storeScenario));
   const holdEnter = useRef(false);
   const listen = useListen(sentence.en);
   const doneCount = Math.min(doneIds.size, pool.length);
@@ -130,11 +147,11 @@ export function Practice({ pool, access, onBack }: PracticeProps) {
   };
 
   const markDone = (id: string) => {
-    if (!seed || doneIds.has(id)) return;
+    if (doneIds.has(id)) return;
     const next = new Set(doneIds);
     next.add(id);
     setDoneIds(next);
-    saveDoneIds(seed.level, seed.scenario, next);
+    saveDoneIds(storeLevel, storeScenario, next);
   };
 
   const check = (fromEnter = false) => {
@@ -145,12 +162,12 @@ export function Practice({ pool, access, onBack }: PracticeProps) {
       return;
     }
     const next = checkSlots(values, answers);
-    if (!result && seed) {
+    if (!result) {
       const counted = next.correct
         ? { correct: stats.correct + 1, wrong: stats.wrong }
         : { correct: stats.correct, wrong: stats.wrong + 1 };
       setStats(counted);
-      saveCheckStats(seed.level, seed.scenario, counted);
+      saveCheckStats(storeLevel, storeScenario, counted);
     }
     setResult(next);
     playCheckFx(next.correct);
@@ -201,6 +218,15 @@ export function Practice({ pool, access, onBack }: PracticeProps) {
         <span>实时正确率 {accuracy}%</span>
       </div>
       <section className="panel prompt-card">
+        <button
+          type="button"
+          className={`fav-btn ${saved.has(sentence.id) ? "is-on" : ""}`}
+          aria-label={saved.has(sentence.id) ? "取消收藏" : "收藏"}
+          aria-pressed={saved.has(sentence.id)}
+          onClick={() => setSaved(toggleFavorite(sentence.id))}
+        >
+          <IconStar filled={saved.has(sentence.id)} />
+        </button>
         <ZhLine text={sentence.zh} />
         <div className="action-row tools">
           <button

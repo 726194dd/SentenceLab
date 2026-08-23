@@ -386,17 +386,70 @@ h3 {
 
 .prompt-card {
   --zh-slot: clamp(42px, 7vw, 56px);
+  --fav-space: 40px;
+  position: relative;
   width: max-content;
   min-width: min(560px, 100%);
   max-width: 100%;
   margin-inline: auto;
-  padding: 28px 32px 22px;
+  padding: 28px 26px 22px;
   text-align: center;
+}
+
+.fav-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--fav-space);
+  height: var(--fav-space);
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+}
+
+.fav-btn svg {
+  width: 24px;
+  height: 24px;
+}
+
+.fav-btn.is-on {
+  color: var(--honey);
+}
+
+.fav-card {
+  margin-top: 20px;
+  text-align: left;
+}
+
+.fav-list {
+  display: grid;
+  gap: 10px;
+  max-height: 320px;
+  overflow: auto;
+}
+
+.fav-item strong {
+  display: block;
+  font-size: 16px;
+  font-weight: var(--font-title);
+}
+
+.fav-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 14px;
 }
 
 .zh-line {
   height: var(--zh-slot);
   margin: 0;
+  padding-inline: var(--fav-space);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -409,8 +462,10 @@ h3 {
 
 .zh-line-fit {
   display: inline-block;
+  max-width: 100%;
   transform-origin: center center;
-  white-space: nowrap;
+  text-align: center;
+  overflow-wrap: anywhere;
 }
 
 .drill-zh {
@@ -734,6 +789,23 @@ h3 {
 .word-blanks:not(.compact) .word-blank-body input {
   border-bottom-width: 1.5px;
   padding: 8px 0.12em 8px;
+}
+
+.word-blanks:not(.compact):not(.has-slots) {
+  gap: 0 24px;
+  padding: 4px 2px;
+  align-items: flex-end;
+}
+
+.word-blanks:not(.compact):not(.has-slots) .word-blank {
+  line-height: 1.5;
+}
+
+.word-blanks:not(.compact):not(.has-slots) .word-blank-measure,
+.word-blanks:not(.compact):not(.has-slots) .word-blank-body input {
+  padding-top: 0;
+  padding-bottom: 0;
+  line-height: 1.5;
 }
 
 .word-blank-body input:focus {
@@ -1116,7 +1188,18 @@ h3 {
   }
 
   .prompt-card {
+    --fav-space: 36px;
     padding: 18px 14px 14px;
+  }
+
+  .fav-btn {
+    top: 8px;
+    right: 8px;
+  }
+
+  .fav-btn svg {
+    width: 20px;
+    height: 20px;
   }
 
   .scene-backdrop {

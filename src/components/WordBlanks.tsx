@@ -61,6 +61,7 @@ export function WordBlanks({
 }: WordBlanksProps) {
   const slots = answerSlots(target);
   const refs = useRef<Array<HTMLInputElement | null>>([]);
+  const showHints = Boolean(hints && !compact);
 
   const focusAt = (index: number) => {
     const next = Math.max(0, Math.min(index, slots.length - 1));
@@ -74,7 +75,7 @@ export function WordBlanks({
 
   return (
     <div
-      className={`word-blanks ${compact ? "compact" : ""} ${shake ? "is-shake" : ""} ${!compact ? "has-slots" : ""}`}
+      className={`word-blanks ${compact ? "compact" : ""} ${shake ? "is-shake" : ""} ${showHints ? "has-slots" : ""}`}
       role="group"
       aria-label="按词填写英文"
     >
@@ -84,12 +85,12 @@ export function WordBlanks({
         const measure = compact && typed.length > word.length ? typed : word;
         const hint = hints?.[index];
         return (
-          <label key={`${word}-${index}`} className={`word-blank ${mark} ${compact ? "" : "is-hint"}`}>
-            {compact ? null : (
+          <label key={`${word}-${index}`} className={`word-blank ${mark} ${showHints ? "is-hint" : ""}`}>
+            {showHints ? (
               <span className={`word-pos-pill ${hint?.pos ? `pos-${posTone(hint.pos)}` : "is-empty"}`}>
                 <span className="word-pos-label">{hint?.pos || "词"}</span>
               </span>
-            )}
+            ) : null}
             <span className="word-blank-body">
             <span className="word-blank-measure" aria-hidden>
               {measure}
@@ -168,8 +169,8 @@ export function WordBlanks({
               }}
             />
             </span>
-            {compact ? null : <FitHint className="word-blank-ipa" text={hint?.phonetic || "\u00a0"} />}
-            {compact ? null : <FitHint className="word-blank-zh" text={hint?.zh || "\u00a0"} />}
+            {showHints ? <FitHint className="word-blank-ipa" text={hint?.phonetic || "\u00a0"} /> : null}
+            {showHints ? <FitHint className="word-blank-zh" text={hint?.zh || "\u00a0"} /> : null}
           </label>
         );
       })}
