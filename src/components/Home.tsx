@@ -1,28 +1,26 @@
-import { LEVELS, SCENARIOS, levelLabel, scenarioLabel } from "../data/catalog";
-import type { Level, Scenario, Sentence } from "../types";
+import { LEVELS, SCENARIOS } from "../data/catalog";
+import type { Level, Scenario } from "../types";
 
 interface HomeProps {
   level: Level;
   scenario: Scenario;
   poolCount: number;
-  favorites: Sentence[];
+  favoriteCount: number;
   onLevel: (level: Level) => void;
   onScenario: (scenario: Scenario) => void;
   onStart: () => void;
   onStartFavorites: () => void;
-  onOpenFavorite: (id: string) => void;
 }
 
 export function Home({
   level,
   scenario,
   poolCount,
-  favorites,
+  favoriteCount,
   onLevel,
   onScenario,
   onStart,
   onStartFavorites,
-  onOpenFavorite,
 }: HomeProps) {
   return (
     <div className="app-shell home">
@@ -68,35 +66,15 @@ export function Home({
         </section>
       </div>
 
-      <section className="panel fav-card">
-        <h2>收藏 {favorites.length > 0 ? favorites.length : ""}</h2>
-        {favorites.length === 0 ? (
-          <p className="hint">还没有收藏</p>
-        ) : (
-          <div className="fav-list">
-            {favorites.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                className="choice fav-item"
-                onClick={() => onOpenFavorite(item.id)}
-              >
-                <strong>{item.zh}</strong>
-                <small>
-                  {levelLabel(item.level)} · {scenarioLabel(item.scenario)}
-                </small>
-              </button>
-            ))}
-          </div>
-        )}
-        {favorites.length > 0 ? (
-          <div className="fav-actions">
-            <button type="button" className="btn btn-ghost" onClick={onStartFavorites}>
-              练习收藏
-            </button>
-          </div>
-        ) : null}
-      </section>
+      <button
+        type="button"
+        className="panel fav-card"
+        disabled={favoriteCount === 0}
+        onClick={onStartFavorites}
+      >
+        <h2>收藏</h2>
+        <p className="hint">{favoriteCount > 0 ? `${favoriteCount} 句` : "还没有收藏"}</p>
+      </button>
 
       <div className="start-row">
         <button type="button" className="btn btn-primary" onClick={onStart} disabled={poolCount === 0}>

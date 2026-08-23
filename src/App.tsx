@@ -12,7 +12,6 @@ export function App() {
   const [scenario, setScenario] = useState<Scenario>("daily");
   const [started, setStarted] = useState(false);
   const [fromFavorites, setFromFavorites] = useState(false);
-  const [startId, setStartId] = useState<string>();
   const access = useAccess();
 
   const pool = useMemo(() => filterSentences(SENTENCES, level, scenario), [level, scenario]);
@@ -22,10 +21,9 @@ export function App() {
     [favoriteIds],
   );
 
-  const begin = (favorites: boolean, id?: string) => {
+  const begin = (favorites: boolean) => {
     access.startTrial();
     setFromFavorites(favorites);
-    setStartId(id);
     setStarted(true);
   };
 
@@ -34,9 +32,8 @@ export function App() {
     if (active.length > 0) {
       return (
         <Practice
-          key={`${fromFavorites ? "fav" : `${level}-${scenario}`}-${startId ?? "any"}`}
+          key={fromFavorites ? "fav" : `${level}-${scenario}`}
           pool={active}
-          startId={startId}
           storageLevel={fromFavorites ? "favorites" : level}
           storageScenario={fromFavorites ? "all" : scenario}
           access={access}
@@ -51,12 +48,11 @@ export function App() {
       level={level}
       scenario={scenario}
       poolCount={pool.length}
-      favorites={favoritePool}
+      favoriteCount={favoritePool.length}
       onLevel={setLevel}
       onScenario={setScenario}
       onStart={() => begin(false)}
       onStartFavorites={() => begin(true)}
-      onOpenFavorite={(id) => begin(true, id)}
     />
   );
 }
