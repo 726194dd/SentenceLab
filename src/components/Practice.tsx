@@ -3,12 +3,14 @@ import { levelLabel, scenarioLabel } from "../data/catalog";
 import { answersOf, checkSlots, emptySlots } from "../lib/check";
 import { nextSentence } from "../lib/pool";
 import { loadDoneIds, saveDoneIds } from "../lib/progress";
+import { playCheckFx } from "../lib/fx";
 import { speakEnglish, stopSpeech } from "../lib/speech";
 import { useListen } from "../lib/useSpeech";
 import type { Sentence, SlotCheck } from "../types";
 import type { useAccess } from "../lib/useAccess";
 import { DrillList } from "./DrillList";
 import { IconCheck, IconEye, IconRefresh, IconSpeaker } from "./Icons";
+import { AnswerWords } from "./AnswerWords";
 import { NotesPanel } from "./NotesPanel";
 import { Paywall } from "./Paywall";
 import { WordBlanks } from "./WordBlanks";
@@ -28,6 +30,7 @@ export function Practice({ pool, access, onBack }: PracticeProps) {
   const [values, setValues] = useState(() => emptySlots(sentence.en));
   const [result, setResult] = useState<SlotCheck | null>(null);
   const [revealed, setRevealed] = useState(false);
+  const [shake, setShake] = useState(false);
   const [listenFirst, setListenFirst] = useState(false);
   const listen = useListen(sentence.en);
   const doneCount = Math.min(doneIds.size, pool.length);
@@ -54,6 +57,7 @@ export function Practice({ pool, access, onBack }: PracticeProps) {
     setValues(emptySlots(next.en));
     setResult(null);
     setRevealed(false);
+    setShake(false);
   };
 
   const markDone = (id: string) => {
@@ -68,10 +72,15 @@ export function Practice({ pool, access, onBack }: PracticeProps) {
     if (access.expired) return;
     const next = checkSlots(values, answers);
     setResult(next);
+    playCheckFx(next.correct);
     if (next.correct) {
+      setShake(false);
       setRevealed(true);
       markDone(sentence.id);
+      return;
     }
+    setShake(false);
+    requestAnimationFrame(() => setShake(true));
   };
 
   return (
@@ -141,10 +150,12 @@ export function Practice({ pool, access, onBack }: PracticeProps) {
           target={sentence.en}
           values={values}
           marks={marks}
+          shake={shake}
           autoFocus
           onChange={(next) => {
             setValues(next);
             setResult(null);
+            setShake(false);
           }}
           onSubmit={check}
         />
@@ -157,10 +168,13 @@ export function Practice({ pool, access, onBack }: PracticeProps) {
         {revealed ? (
           <div className="answer-reveal">
             <div className="brand-kicker">参考答案</div>
-            <p className="en-answer">{sentence.en}</p>
-            {sentence.alts?.length ? (
-              <p className="hint-line">也可接受：{sentence.alts.join(" / ")}</p>
-            ) : null}
+            <AnswerWords text={sentence.en} vocab={sentence.notes.vocab} />
+            {sentence.alts?.map((alt) => (
+              <div className="answer-alt" key={alt}>
+                <span className="hint-line">也可接受</span>
+                <AnswerWords text={alt} vocab={sentence.notes.vocab} compact />
+              </div>
+            ))}
           </div>
         ) : null}
       </section>
@@ -173,8 +187,8 @@ export function Practice({ pool, access, onBack }: PracticeProps) {
           </div>
         </>
       ) : null}
-      {access.expired ? <Paywall onUnlock={access.unlock} /> : null}
       </div>
+      {access.expired ? <Paywall onUnlock={access.unlock} /> : null}
     </div>
   );
 }

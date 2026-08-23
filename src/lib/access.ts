@@ -1,4 +1,4 @@
-import { LICENSE_URL, TRIAL_MS } from "../config/access";
+import { LICENSE_URL, TRIAL_MS, UNLOCK_CODE } from "../config/access";
 
 const STARTED_KEY = "sentence-lab.trialStartedAt";
 const UNLOCKED_KEY = "sentence-lab.unlocked";
@@ -56,15 +56,13 @@ export async function confirmUnlockRemote(code: string): Promise<boolean> {
   return data.ok === true;
 }
 
-export function consumeUnlockFromLocation(search = window.location.search): boolean {
-  const params = new URLSearchParams(search);
-  if (params.get("unlocked") === "1" || params.get("unlock") === "1") {
-    unlockLocal();
-    params.delete("unlocked");
-    params.delete("unlock");
-    const next = `${window.location.pathname}${params.toString() ? `?${params}` : ""}${window.location.hash}`;
-    window.history.replaceState({}, "", next);
-    return true;
+export async function confirmUnlock(code: string): Promise<boolean> {
+  const trimmed = code.trim();
+  if (!trimmed) return false;
+  if (UNLOCK_CODE && trimmed === UNLOCK_CODE) return true;
+  try {
+    return await confirmUnlockRemote(trimmed);
+  } catch {
+    return false;
   }
-  return false;
 }

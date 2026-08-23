@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
 import {
-  consumeUnlockFromLocation,
   formatRemain,
   isTrialExpired,
   isUnlocked,
@@ -10,10 +9,7 @@ import {
 } from "./access";
 
 export function useAccess() {
-  const [unlocked, setUnlocked] = useState(() => {
-    consumeUnlockFromLocation();
-    return isUnlocked();
-  });
+  const [unlocked, setUnlocked] = useState(() => isUnlocked());
   const [remain, setRemain] = useState(() => remainingMs());
 
   useEffect(() => {

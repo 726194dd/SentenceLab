@@ -347,6 +347,35 @@ h3 {
   padding: 8px 2px 6px;
 }
 
+.word-blanks.is-shake {
+  animation: blank-shake 0.42s ease;
+}
+
+@keyframes blank-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-8px);
+  }
+  40% {
+    transform: translateX(7px);
+  }
+  60% {
+    transform: translateX(-5px);
+  }
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .word-blanks.is-shake {
+    animation: none;
+  }
+}
+
 .word-blanks.compact {
   gap: 12px 14px;
 }
@@ -459,6 +488,105 @@ h3 {
   margin: 8px 0 0;
 }
 
+.en-answer.compact {
+  font-size: 18px;
+}
+
+.answer-word {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  line-height: inherit;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.answer-word:hover,
+.answer-word.is-on {
+  color: var(--terracotta-deep);
+  border-bottom-color: var(--honey);
+}
+
+.answer-alt {
+  margin-top: 10px;
+}
+
+.word-card {
+  margin-top: 14px;
+  text-align: left;
+  background: var(--sheet);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px 16px;
+}
+
+.word-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.word-card-head strong {
+  font-family: "Fraunces", "Noto Serif SC", serif;
+  font-size: 28px;
+  line-height: 1.1;
+}
+
+.word-phonetic {
+  color: var(--muted);
+}
+
+.word-zh {
+  margin: 10px 0 0;
+  font-size: 18px;
+}
+
+.word-phrase,
+.word-example {
+  margin: 6px 0 0;
+  color: var(--muted);
+}
+
+.word-sense {
+  margin-top: 10px;
+}
+
+.word-sense p,
+.word-line p {
+  margin: 4px 0 0;
+}
+
+.word-gloss {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: var(--honey-soft);
+  color: var(--ink);
+}
+
+.word-gloss b {
+  font-family: "Source Sans 3", sans-serif;
+}
+
+.word-pos {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--terracotta-deep);
+  background: var(--honey-soft);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
 .notes {
   display: grid;
   gap: 14px;
@@ -521,9 +649,9 @@ h3 {
 }
 
 .paywall {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  z-index: 8;
+  z-index: 30;
   display: flex;
   align-items: center;
   justify-content: center;

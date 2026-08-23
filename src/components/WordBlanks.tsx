@@ -8,6 +8,7 @@ interface WordBlanksProps {
   marks: SlotMark[];
   autoFocus?: boolean;
   compact?: boolean;
+  shake?: boolean;
   onChange: (values: string[]) => void;
   onSubmit: () => void;
 }
@@ -18,6 +19,7 @@ export function WordBlanks({
   marks,
   autoFocus = false,
   compact = false,
+  shake = false,
   onChange,
   onSubmit,
 }: WordBlanksProps) {
@@ -35,7 +37,11 @@ export function WordBlanks({
   };
 
   return (
-    <div className={`word-blanks ${compact ? "compact" : ""}`} role="group" aria-label="按词填写英文">
+    <div
+      className={`word-blanks ${compact ? "compact" : ""} ${shake ? "is-shake" : ""}`}
+      role="group"
+      aria-label="按词填写英文"
+    >
       {slots.map((word, index) => {
         const mark = marks[index] ?? "idle";
         const typed = values[index] ?? "";

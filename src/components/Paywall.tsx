@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { CHECKOUT_URL, PRICE_LABEL } from "../config/access";
-import { confirmUnlockRemote } from "../lib/access";
+import { confirmUnlock } from "../lib/access";
 
 interface PaywallProps {
   onUnlock: () => void;
@@ -12,27 +12,28 @@ export function Paywall({ onUnlock }: PaywallProps) {
   const [error, setError] = useState("");
 
   const pay = () => {
-    const url = new URL(CHECKOUT_URL);
-    url.searchParams.set("redirect", `${window.location.origin}${import.meta.env.BASE_URL}?unlocked=1`);
-    window.location.assign(url.toString());
+    window.location.assign(CHECKOUT_URL);
   };
 
   const paid = async () => {
     setError("");
-    if (code.trim()) {
-      setBusy(true);
-      try {
-        const ok = await confirmUnlockRemote(code);
-        if (!ok) {
-          setError("兑换未确认");
-          return;
-        }
-      } catch {
-        setError("兑换未确认");
+    const trimmed = code.trim();
+    if (!trimmed) {
+      setError("请输入兑换码");
+      return;
+    }
+    setBusy(true);
+    try {
+      const ok = await confirmUnlock(trimmed);
+      if (!ok) {
+        setError("兑换码无效");
         return;
-      } finally {
-        setBusy(false);
       }
+    } catch {
+      setError("兑换码无效");
+      return;
+    } finally {
+      setBusy(false);
     }
     onUnlock();
   };
@@ -54,7 +55,7 @@ export function Paywall({ onUnlock }: PaywallProps) {
           className="paywall-code"
           value={code}
           onChange={(event) => setCode(event.target.value)}
-          placeholder="兑换码（选填）"
+          placeholder="兑换码"
           autoCapitalize="off"
           autoCorrect="off"
           spellCheck={false}

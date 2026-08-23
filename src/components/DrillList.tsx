@@ -1,20 +1,33 @@
 import { useState } from "react";
 import type { Drill } from "../types";
 import { answersOf, checkSlots, emptySlots } from "../lib/check";
+import { playCheckFx } from "../lib/fx";
 import { useListen } from "../lib/useSpeech";
 import { IconSpeaker } from "./Icons";
+import { AnswerWords } from "./AnswerWords";
 import { WordBlanks } from "./WordBlanks";
 
 function DrillCard({ drill }: { drill: Drill }) {
   const [values, setValues] = useState(() => emptySlots(drill.en));
   const [checked, setChecked] = useState(false);
+  const [shake, setShake] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [showAnswer, setShowAnswer] = useState(false);
   const listen = useListen(drill.en);
   const result = checkSlots(values, answersOf(drill));
   const marks = checked ? result.marks : values.map(() => "idle" as const);
 
-  const check = () => setChecked(true);
+  const check = () => {
+    const next = checkSlots(values, answersOf(drill));
+    setChecked(true);
+    playCheckFx(next.correct);
+    if (next.correct) {
+      setShake(false);
+      return;
+    }
+    setShake(false);
+    requestAnimationFrame(() => setShake(true));
+  };
 
   return (
     <article className="drill-card">
@@ -35,10 +48,12 @@ function DrillCard({ drill }: { drill: Drill }) {
         target={drill.en}
         values={values}
         marks={marks}
+        shake={shake}
         compact
         onChange={(next) => {
           setValues(next);
           setChecked(false);
+          setShake(false);
         }}
         onSubmit={check}
       />
@@ -59,7 +74,7 @@ function DrillCard({ drill }: { drill: Drill }) {
           {result.correct ? "这句已经正确。" : `还有 ${result.wrongCount} 个词是红的，改完再检查。`}
         </p>
       ) : null}
-      {showAnswer ? <p className="en-answer">{drill.en}</p> : null}
+      {showAnswer ? <AnswerWords text={drill.en} vocab={[]} compact /> : null}
     </article>
   );
 }
