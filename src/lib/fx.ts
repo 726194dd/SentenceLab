@@ -1,45 +1,52 @@
-let ctx: AudioContext | null = null;
+import { stopSpeech } from "./speech";
+import nextUrl from "../assets/sfx/next02.wav";
+import rightUrl from "../assets/sfx/right01.wav";
+import wrongUrl from "../assets/sfx/wrong01.wav";
 
-function audio(): AudioContext | null {
-  if (typeof window === "undefined") return null;
-  const Ctor = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-  if (!Ctor) return null;
-  if (!ctx) ctx = new Ctor();
-  if (ctx.state === "suspended") void ctx.resume();
-  return ctx;
+type Sfx = "right" | "wrong" | "next";
+
+const urls: Record<Sfx, string> = {
+  right: rightUrl,
+  wrong: wrongUrl,
+  next: nextUrl,
+};
+
+let player: HTMLAudioElement | null = null;
+let unlocked = false;
+
+function playSfx(name: Sfx, stopVoice = true): void {
+  if (stopVoice) stopSpeech();
+  if (!player) player = new Audio();
+  player.pause();
+  player.currentTime = 0;
+  player.src = urls[name];
+  player.volume = 1;
+  const attempt = player.play();
+  if (attempt) void attempt.catch(() => {});
 }
 
-function tone(
-  context: AudioContext,
-  frequency: number,
-  start: number,
-  duration: number,
-  type: OscillatorType,
-  gain: number,
-) {
-  const osc = context.createOscillator();
-  const amp = context.createGain();
-  osc.type = type;
-  osc.frequency.setValueAtTime(frequency, start);
-  amp.gain.setValueAtTime(0.0001, start);
-  amp.gain.exponentialRampToValueAtTime(gain, start + 0.012);
-  amp.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-  osc.connect(amp);
-  amp.connect(context.destination);
-  osc.start(start);
-  osc.stop(start + duration + 0.02);
+export function unlockFx(): void {
+  if (unlocked || typeof window === "undefined") return;
+  unlocked = true;
+  if (!player) player = new Audio();
+  player.src = urls.right;
+  player.volume = 0;
+  void player.play().then(() => {
+    player?.pause();
+    if (player) {
+      player.currentTime = 0;
+      player.volume = 1;
+    }
+  }).catch(() => {
+    unlocked = false;
+    if (player) player.volume = 1;
+  });
 }
 
 export function playCheckFx(correct: boolean): void {
-  const context = audio();
-  if (!context) return;
-  const start = context.currentTime + 0.01;
-  if (correct) {
-    tone(context, 523.25, start, 0.12, "sine", 0.09);
-    tone(context, 659.25, start + 0.07, 0.14, "sine", 0.09);
-    tone(context, 783.99, start + 0.15, 0.22, "triangle", 0.08);
-    return;
-  }
-  tone(context, 196, start, 0.13, "square", 0.045);
-  tone(context, 146.83, start + 0.1, 0.18, "square", 0.04);
+  playSfx(correct ? "right" : "wrong");
+}
+
+export function playNextFx(): void {
+  playSfx("next");
 }

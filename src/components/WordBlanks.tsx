@@ -9,6 +9,7 @@ interface WordBlanksProps {
   autoFocus?: boolean;
   compact?: boolean;
   shake?: boolean;
+  isCorrect?: boolean;
   onChange: (values: string[]) => void;
   onSubmit: () => void;
 }
@@ -20,6 +21,7 @@ export function WordBlanks({
   autoFocus = false,
   compact = false,
   shake = false,
+  isCorrect = false,
   onChange,
   onSubmit,
 }: WordBlanksProps) {
@@ -85,12 +87,18 @@ export function WordBlanks({
                   return;
                 }
 
-                if (event.key === " " || event.key === "Enter") {
+                if (event.key === "Enter") {
                   event.preventDefault();
-                  if (event.key === "Enter" && index === slots.length - 1) {
+                  if (isCorrect || index === slots.length - 1) {
                     onSubmit();
                     return;
                   }
+                  focusAt(index + 1);
+                  return;
+                }
+
+                if (event.key === " ") {
+                  event.preventDefault();
                   focusAt(index + 1);
                   return;
                 }

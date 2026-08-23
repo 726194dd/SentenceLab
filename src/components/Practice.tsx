@@ -3,7 +3,7 @@ import { levelLabel, scenarioLabel } from "../data/catalog";
 import { answersOf, checkSlots, emptySlots } from "../lib/check";
 import { nextSentence } from "../lib/pool";
 import { loadDoneIds, saveDoneIds } from "../lib/progress";
-import { playCheckFx } from "../lib/fx";
+import { playCheckFx, playNextFx } from "../lib/fx";
 import { speakEnglish, stopSpeech } from "../lib/speech";
 import { useListen } from "../lib/useSpeech";
 import type { Sentence, SlotCheck } from "../types";
@@ -53,6 +53,7 @@ export function Practice({ pool, access, onBack }: PracticeProps) {
     if (access.expired) return;
     const next = nextSentence(pool, sentence.id, doneIds);
     if (!next) return;
+    playNextFx();
     setSentence(next);
     setValues(emptySlots(next.en));
     setResult(null);
@@ -70,6 +71,10 @@ export function Practice({ pool, access, onBack }: PracticeProps) {
 
   const check = () => {
     if (access.expired) return;
+    if (result?.correct) {
+      refresh();
+      return;
+    }
     const next = checkSlots(values, answers);
     setResult(next);
     playCheckFx(next.correct);
@@ -154,6 +159,7 @@ export function Practice({ pool, access, onBack }: PracticeProps) {
           marks={marks}
           shake={shake}
           autoFocus
+          isCorrect={result?.correct === true}
           onChange={(next) => {
             setValues(next);
             setResult(null);
