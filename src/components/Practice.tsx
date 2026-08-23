@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { levelLabel, scenarioLabel } from "../data/catalog";
+import { SCENE_ART } from "../data/scenes";
 import { answersOf, checkSlots, emptySlots } from "../lib/check";
 import { nextSentence } from "../lib/pool";
 import { loadDoneIds, saveDoneIds } from "../lib/progress";
@@ -138,6 +139,7 @@ export function Practice({ pool, access, onBack }: PracticeProps) {
         </div>
       </div>
       <section className="panel prompt-card">
+        <img className="scene-art" src={SCENE_ART[sentence.scenario]} alt="" />
         <h1 className="zh-line">{sentence.zh}</h1>
         <div className="action-row">
           <button
