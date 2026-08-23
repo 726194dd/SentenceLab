@@ -83,7 +83,16 @@ async function loadEngine(): Promise<KokoroTTS> {
   return enginePromise;
 }
 
+function warmupBrowserVoices() {
+  if (typeof window === "undefined" || !window.speechSynthesis) return;
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.addEventListener("voiceschanged", () => {
+    window.speechSynthesis.getVoices();
+  }, { once: true });
+}
+
 export function warmupSpeech(): void {
+  warmupBrowserVoices();
   void loadEngine().catch(() => {
     // Browser TTS remains available if the neural model cannot load.
   });
@@ -116,15 +125,38 @@ function playBlob(blob: Blob, token: number): Promise<void> {
   });
 }
 
+const FEMALE_VOICE =
+  /female|woman|samantha|karen|moira|tessa|fiona|victoria|kate|serena|nicky|allison|susan|zira|hazel|aria|jenny|salli|ivy|joanna|kendra|kimberly|emma|amy|ava|linda|siri|google us english$|google uk english female/i;
+const MALE_VOICE =
+  /male|\bman\b|\bguy\b|david|mark|alex|daniel|fred|tom|james|brian|matthew|justin|kevin|rishi|oliver|arthur|aaron|albert|gordon|lee|google uk english male/i;
+
+function voiceLabel(voice: SpeechSynthesisVoice): string {
+  return `${voice.name} ${voice.voiceURI}`;
+}
+
+function isFemaleVoice(voice: SpeechSynthesisVoice): boolean {
+  return FEMALE_VOICE.test(voiceLabel(voice));
+}
+
+function isMaleVoice(voice: SpeechSynthesisVoice): boolean {
+  const label = voiceLabel(voice);
+  return MALE_VOICE.test(label) && !FEMALE_VOICE.test(label);
+}
+
 function pickNaturalVoice(): SpeechSynthesisVoice | undefined {
-  const voices = window.speechSynthesis.getVoices().filter((voice) => voice.lang.startsWith("en"));
+  const voices = window.speechSynthesis.getVoices().filter((voice) => /^en\b/i.test(voice.lang));
+  if (voices.length === 0) return undefined;
+
   const score = (voice: SpeechSynthesisVoice) => {
-    const name = voice.name;
-    if (/neural|natural|online|google|enhanced|premium|aria|jenny|guy/i.test(name)) return 0;
-    if (/zira|david|mark|hazel/i.test(name)) return 3;
-    if (/US|GB|UK/i.test(voice.lang)) return 1;
-    return 2;
+    const label = voiceLabel(voice);
+    let rank = 8;
+    if (isFemaleVoice(voice)) rank -= 6;
+    if (isMaleVoice(voice)) rank += 8;
+    if (/neural|natural|enhanced|premium|online|siri/i.test(label)) rank -= 2;
+    if (/en-US/i.test(voice.lang)) rank -= 1;
+    return rank;
   };
+
   return [...voices].sort((a, b) => score(a) - score(b))[0];
 }
 
@@ -143,9 +175,9 @@ function speakWithBrowser(text: string, token: number): Promise<void> {
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = "en-US";
       utterance.rate = 0.88;
-      utterance.pitch = 1;
       const voice = pickNaturalVoice();
       if (voice) utterance.voice = voice;
+      utterance.pitch = voice && isMaleVoice(voice) ? 1.18 : 1;
       utterance.onend = () => {
         if (token === playToken) setStatus("idle");
         resolve();
