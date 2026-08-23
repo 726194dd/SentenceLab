@@ -1,4 +1,4 @@
-export const TRIAL_MS = 3 * 60 * 1000;
+export const TRIAL_MS = 10 * 60 * 1000;
 
 export const PRICE_LABEL = "¥12 永久解锁";
 
