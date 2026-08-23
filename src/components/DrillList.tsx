@@ -32,7 +32,7 @@ function DrillCard({ drill }: { drill: Drill }) {
   return (
     <article className="drill-card">
       <span className="focus">{drill.focus}</span>
-      <p className="zh-line" style={{ fontSize: 22 }}>{drill.zh}</p>
+      <p className="zh-line drill-zh">{drill.zh}</p>
       <div className="action-row">
         <button
           type="button"

@@ -30,10 +30,18 @@
   box-sizing: border-box;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 html,
 body,
 #root {
   min-height: 100%;
+  min-height: 100dvh;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 #root {
@@ -48,6 +56,7 @@ body,
 
 body {
   margin: 0;
+  overflow-x: hidden;
   background:
     radial-gradient(circle at 14% 10%, color-mix(in srgb, var(--honey) 42%, transparent), transparent 32%),
     radial-gradient(circle at 88% 8%, color-mix(in srgb, var(--sage) 32%, transparent), transparent 30%),
@@ -63,6 +72,7 @@ input {
 
 button {
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 h1,
@@ -77,6 +87,9 @@ h3 {
   width: min(880px, calc(100% - 32px));
   margin: 0 auto;
   padding: 40px 0 80px;
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+  padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
 }
 
 .app-shell.home,
@@ -103,10 +116,11 @@ h3 {
 
 .brand-title {
   font-family: "Noto Sans SC", "Microsoft YaHei", "PingFang SC", "Heiti SC", sans-serif;
-  font-size: clamp(44px, 7.5vw, 72px);
+  font-size: clamp(32px, 8vw, 72px);
   font-weight: 900;
   letter-spacing: 0.06em;
   line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 
 .brand-sub {
@@ -119,6 +133,10 @@ h3 {
   display: grid;
   grid-template-columns: 1.1fr 0.9fr;
   gap: 20px;
+}
+
+.home-grid > * {
+  min-width: 0;
 }
 
 .panel {
@@ -159,6 +177,7 @@ h3 {
   background: var(--cream);
   border-radius: 16px;
   padding: 12px 14px;
+  min-height: 44px;
   color: inherit;
   transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
@@ -172,6 +191,11 @@ h3 {
   border-color: var(--honey);
   box-shadow: inset 0 0 0 1px var(--honey);
   background: var(--honey-soft);
+}
+
+.choice strong,
+.choice small {
+  overflow-wrap: anywhere;
 }
 
 .choice small {
@@ -201,6 +225,7 @@ h3 {
   border: 0;
   border-radius: 999px;
   padding: 11px 18px;
+  min-height: 44px;
   font-weight: 700;
 }
 
@@ -244,6 +269,7 @@ h3 {
 .practice-page {
   width: 100%;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }
@@ -262,7 +288,7 @@ h3 {
   align-items: center;
   gap: 12px;
   width: 100%;
-  padding: 20px 24px 0;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-right, 0px)) 0 max(24px, env(safe-area-inset-left, 0px));
   flex-wrap: wrap;
 }
 
@@ -320,8 +346,13 @@ h3 {
 
 .zh-line {
   font-family: "Noto Serif SC", serif;
-  font-size: clamp(26px, 4vw, 36px);
+  font-size: clamp(22px, 4.4vw, 36px);
   line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.drill-zh {
+  font-size: clamp(18px, 3.6vw, 22px);
 }
 
 .action-row {
@@ -383,6 +414,7 @@ h3 {
 .word-blank {
   position: relative;
   display: inline-block;
+  max-width: 100%;
   font-size: 24px;
   line-height: 1.2;
 }
@@ -390,7 +422,8 @@ h3 {
 .word-blank-measure {
   visibility: hidden;
   display: block;
-  white-space: pre;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
   font: inherit;
   font-weight: 400;
   padding: 4px 0.28em 6px;
@@ -408,6 +441,7 @@ h3 {
   padding: 4px 0.12em 6px;
   text-align: center;
   font: inherit;
+  font-size: max(16px, 1em);
   line-height: 1.2;
   color: var(--ink);
   outline: none;
@@ -483,9 +517,10 @@ h3 {
 }
 
 .en-answer {
-  font-size: 22px;
+  font-size: clamp(18px, 3.4vw, 22px);
   color: var(--navy);
   margin: 8px 0 0;
+  overflow-wrap: anywhere;
 }
 
 .en-answer.compact {
@@ -522,6 +557,8 @@ h3 {
   border: 1px solid var(--line);
   border-radius: 16px;
   padding: 14px 16px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .word-card-head {
@@ -611,6 +648,13 @@ h3 {
   margin-bottom: 8px;
 }
 
+.note-block p,
+.note-block li,
+.hint-line,
+.vocab-item span {
+  overflow-wrap: anywhere;
+}
+
 .vocab-list {
   display: grid;
   gap: 6px;
@@ -661,7 +705,8 @@ h3 {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  overflow-y: auto;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
   background: color-mix(in srgb, var(--cream) 78%, transparent);
 }
 
@@ -690,20 +735,150 @@ h3 {
   color: var(--ink);
   padding: 10px 12px;
   text-align: center;
+  font-size: 16px;
 }
 
-@media (max-width: 860px) {
-  .home-grid,
-  .scenario-list {
+@media (hover: none) {
+  .choice:hover {
+    transform: none;
+  }
+}
+
+@media (max-width: 960px) {
+  .home-grid {
     grid-template-columns: 1fr;
+  }
+
+  .scenario-list {
+    grid-template-columns: 1fr 1fr;
   }
 
   .start-row {
     align-items: stretch;
   }
 
+  .start-row .btn {
+    width: min(280px, 100%);
+    margin: 0 auto;
+  }
+
   .vocab-item {
     flex-direction: column;
     gap: 2px;
+  }
+
+  .vocab-item b {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-shell {
+    width: min(100% - 20px, 880px);
+    padding-top: 20px;
+    padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .brand-title {
+    letter-spacing: 0.04em;
+  }
+
+  .panel {
+    padding: 16px;
+    border-radius: 20px;
+  }
+
+  .scenario-list {
+    grid-template-columns: 1fr;
+  }
+
+  .app-shell.home {
+    padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .start-row {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 4;
+    margin: 0;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+    background: linear-gradient(transparent, var(--paper) 36%);
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: max(12px, env(safe-area-inset-top, 0px)) 12px 0;
+  }
+
+  .crumbs {
+    gap: 6px;
+  }
+
+  .chip {
+    font-size: 12px;
+    padding: 5px 8px;
+  }
+
+  .toggle {
+    justify-content: flex-start;
+    font-size: 14px;
+  }
+
+  .prompt-card {
+    padding: 18px 14px 14px;
+  }
+
+  .practice-page.stage .app-shell {
+    justify-content: flex-start;
+    padding-top: 8px;
+  }
+
+  .word-blank {
+    font-size: 20px;
+  }
+
+  .action-row {
+    margin: 14px 0 6px;
+    gap: 8px;
+  }
+
+  .btn {
+    padding: 10px 14px;
+  }
+
+  .word-card-head strong {
+    font-size: 24px;
+  }
+
+  .paywall-card {
+    width: min(400px, 100%);
+  }
+}
+
+@media (max-height: 540px) {
+  .practice-page.stage .app-shell {
+    justify-content: flex-start;
+    padding-top: 8px;
+    padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .toolbar {
+    padding-top: max(8px, env(safe-area-inset-top, 0px));
+  }
+
+  .prompt-card {
+    padding: 16px 16px 12px;
+  }
+
+  .paywall {
+    align-items: flex-start;
+  }
+
+  .zh-line {
+    font-size: clamp(18px, 5vh, 28px);
   }
 }
