@@ -75,7 +75,6 @@ export function Practice({ pool, access, onBack }: PracticeProps) {
     playCheckFx(next.correct);
     if (next.correct) {
       setShake(false);
-      setRevealed(true);
       markDone(sentence.id);
       return;
     }

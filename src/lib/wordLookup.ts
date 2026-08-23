@@ -197,22 +197,22 @@ export function localZh(token: string): string | undefined {
   return undefined;
 }
 
-export async function translateWord(token: string): Promise<string> {
-  const clean = token.replace(/[^A-Za-z']/g, "");
-  const key = clean.toLowerCase();
-  if (!key) return "";
+function cleanQuery(text: string): string {
+  return text
+    .replace(/[“”"‘’`]/g, "'")
+    .replace(/[^A-Za-z0-9'\s-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+async function fetchZh(query: string): Promise<string> {
+  const key = query.toLowerCase();
   const cached = zhCache.get(key);
   if (cached !== undefined) return cached;
 
-  const local = localZh(clean);
-  if (local) {
-    zhCache.set(key, local);
-    return local;
-  }
-
   try {
     const response = await fetch(
-      `https://api.mymemory.translated.net/get?q=${encodeURIComponent(key)}&langpair=en|zh-CN`,
+      `https://api.mymemory.translated.net/get?q=${encodeURIComponent(query)}&langpair=en|zh-CN`,
     );
     if (!response.ok) {
       zhCache.set(key, "");
@@ -227,6 +227,20 @@ export async function translateWord(token: string): Promise<string> {
     zhCache.set(key, "");
     return "";
   }
+}
+
+export async function translateWord(token: string): Promise<string> {
+  const query = cleanQuery(token);
+  if (!query) return "";
+  const parts = query.split(" ");
+  if (parts.length === 1) {
+    const local = localZh(parts[0]);
+    if (local) {
+      zhCache.set(parts[0].toLowerCase(), local);
+      return local;
+    }
+  }
+  return fetchZh(query);
 }
 
 export async function lookupWord(token: string, vocab: VocabItem[]): Promise<WordEntry> {

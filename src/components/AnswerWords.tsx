@@ -14,6 +14,7 @@ interface AnswerWordsProps {
 function ClickableEnglish({ text, className }: { text: string; className?: string }) {
   const [picked, setPicked] = useState<string | null>(null);
   const [zh, setZh] = useState("");
+  const usedSelect = useRef(false);
 
   useEffect(() => {
     if (!picked) return;
@@ -27,19 +28,47 @@ function ClickableEnglish({ text, className }: { text: string; className?: strin
     };
   }, [picked]);
 
+  const takeSelection = (root: HTMLElement) => {
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed || !sel.rangeCount) return "";
+    const range = sel.getRangeAt(0);
+    if (!root.contains(range.commonAncestorContainer)) return "";
+    return sel.toString().replace(/\s+/g, " ").trim();
+  };
+
   return (
     <div className={`word-line ${className ?? ""}`}>
-      <p>
+      <p
+        onPointerUp={(event) => {
+          const selected = takeSelection(event.currentTarget);
+          if (!selected) return;
+          usedSelect.current = true;
+          setPicked(selected);
+        }}
+      >
         {splitAnswer(text).map((part, index) =>
           part.kind === "word" ? (
-            <button
+            <span
               key={`${part.value}-${index}`}
-              type="button"
+              role="button"
+              tabIndex={0}
               className={`answer-word ${picked?.toLowerCase() === part.value.toLowerCase() ? "is-on" : ""}`}
-              onClick={() => setPicked(part.value)}
+              onClick={() => {
+                if (usedSelect.current) {
+                  usedSelect.current = false;
+                  return;
+                }
+                setPicked(part.value);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  setPicked(part.value);
+                }
+              }}
             >
               {part.value}
-            </button>
+            </span>
           ) : (
             <span key={`${part.value}-${index}`}>{part.value}</span>
           ),

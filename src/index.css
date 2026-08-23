@@ -559,6 +559,12 @@ h3 {
 .word-sense p,
 .word-line p {
   margin: 4px 0 0;
+  user-select: text;
+}
+
+.word-line .answer-word {
+  display: inline;
+  cursor: text;
 }
 
 .word-gloss {
