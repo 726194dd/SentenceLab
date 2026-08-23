@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { levelLabel, scenarioLabel } from "../data/catalog";
 import { answersOf, checkSlots, emptySlots } from "../lib/check";
 import { nextSentence } from "../lib/pool";
@@ -32,6 +32,7 @@ export function Practice({ pool, access, onBack }: PracticeProps) {
   const [revealed, setRevealed] = useState(false);
   const [shake, setShake] = useState(false);
   const [listenFirst, setListenFirst] = useState(false);
+  const holdEnter = useRef(false);
   const listen = useListen(sentence.en);
   const doneCount = Math.min(doneIds.size, pool.length);
   const progressPct = pool.length === 0 ? 0 : Math.round((doneCount / pool.length) * 100);
@@ -48,6 +49,14 @@ export function Practice({ pool, access, onBack }: PracticeProps) {
   useEffect(() => {
     if (access.expired) stopSpeech();
   }, [access.expired]);
+
+  useEffect(() => {
+    const release = (event: KeyboardEvent) => {
+      if (event.key === "Enter") holdEnter.current = false;
+    };
+    window.addEventListener("keyup", release);
+    return () => window.removeEventListener("keyup", release);
+  }, []);
 
   const refresh = () => {
     if (access.expired) return;
@@ -69,9 +78,10 @@ export function Practice({ pool, access, onBack }: PracticeProps) {
     saveDoneIds(seed.level, seed.scenario, next);
   };
 
-  const check = () => {
+  const check = (fromEnter = false) => {
     if (access.expired) return;
     if (result?.correct) {
+      if (fromEnter && holdEnter.current) return;
       refresh();
       return;
     }
@@ -79,6 +89,7 @@ export function Practice({ pool, access, onBack }: PracticeProps) {
     setResult(next);
     playCheckFx(next.correct);
     if (next.correct) {
+      if (fromEnter) holdEnter.current = true;
       setShake(false);
       markDone(sentence.id);
       return;
@@ -165,10 +176,10 @@ export function Practice({ pool, access, onBack }: PracticeProps) {
             setResult(null);
             setShake(false);
           }}
-          onSubmit={check}
+          onSubmit={() => check(true)}
         />
         <div className="action-row">
-          <button type="button" className="btn btn-primary" disabled={access.expired} onClick={check}>
+          <button type="button" className="btn btn-primary" disabled={access.expired} onClick={() => check(false)}>
             <IconCheck />
             Check
           </button>

@@ -81,6 +81,11 @@ export function WordBlanks({
                 const cursor = event.currentTarget.selectionStart ?? 0;
                 const end = event.currentTarget.value.length;
 
+                if (event.key === "Enter" && event.repeat) {
+                  event.preventDefault();
+                  return;
+                }
+
                 if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
                   event.preventDefault();
                   onSubmit();

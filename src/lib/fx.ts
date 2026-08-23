@@ -11,35 +11,67 @@ const urls: Record<Sfx, string> = {
   next: nextUrl,
 };
 
-let player: HTMLAudioElement | null = null;
+const players: Partial<Record<Sfx, HTMLAudioElement>> = {};
 let unlocked = false;
+let rightPlaying = false;
+let nextQueued = false;
 
-function playSfx(name: Sfx, stopVoice = true): void {
-  if (stopVoice) stopSpeech();
-  if (!player) player = new Audio();
-  player.pause();
-  player.currentTime = 0;
-  player.src = urls[name];
-  player.volume = 1;
-  const attempt = player.play();
+function playerOf(name: Sfx): HTMLAudioElement {
+  const existing = players[name];
+  if (existing) return existing;
+  const created = new Audio(urls[name]);
+  created.preload = "auto";
+  players[name] = created;
+  return created;
+}
+
+function playNow(name: Sfx): void {
+  const el = playerOf(name);
+  el.pause();
+  el.currentTime = 0;
+  el.volume = 1;
+  const attempt = el.play();
   if (attempt) void attempt.catch(() => {});
+}
+
+function finishRight(): void {
+  rightPlaying = false;
+  if (!nextQueued) return;
+  nextQueued = false;
+  playNow("next");
+}
+
+function playSfx(name: Sfx): void {
+  stopSpeech();
+  if (name === "right") {
+    nextQueued = false;
+    rightPlaying = true;
+    const el = playerOf("right");
+    el.onended = finishRight;
+    playNow("right");
+    return;
+  }
+  if (name === "next") {
+    if (rightPlaying) {
+      nextQueued = true;
+      return;
+    }
+    playNow("next");
+    return;
+  }
+  playNow("wrong");
 }
 
 export function unlockFx(): void {
   if (unlocked || typeof window === "undefined") return;
   unlocked = true;
-  if (!player) player = new Audio();
-  player.src = urls.right;
-  player.volume = 0;
-  void player.play().then(() => {
-    player?.pause();
-    if (player) {
-      player.currentTime = 0;
-      player.volume = 1;
-    }
+  const probe = new Audio(urls.right);
+  probe.volume = 0;
+  void probe.play().then(() => {
+    probe.pause();
+    probe.currentTime = 0;
   }).catch(() => {
     unlocked = false;
-    if (player) player.volume = 1;
   });
 }
 
