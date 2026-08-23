@@ -97,12 +97,15 @@ export function Practice({ pool, access, onBack }: PracticeProps) {
           ) : null}
         </div>
         <label className="toggle">
-          <input
-            type="checkbox"
-            checked={listenFirst}
-            onChange={(event) => setListenFirst(event.target.checked)}
-          />
-          换句时先听读音
+          <span className="toggle-text">先听读音</span>
+          <span className="switch">
+            <input
+              type="checkbox"
+              checked={listenFirst}
+              onChange={(event) => setListenFirst(event.target.checked)}
+            />
+            <span className="switch-ui" aria-hidden />
+          </span>
         </label>
       </div>
 
