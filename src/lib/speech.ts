@@ -35,9 +35,9 @@ export function subscribeSpeech(listener: (next: SpeechStatus) => void): () => v
 }
 
 function stopBrowserSpeech() {
-  if (typeof window !== "undefined" && window.speechSynthesis) {
-    window.speechSynthesis.cancel();
-  }
+  if (typeof window === "undefined" || !window.speechSynthesis) return;
+  const synth = window.speechSynthesis;
+  if (synth.speaking || synth.pending) synth.cancel();
 }
 
 export function stopSpeech(): void {
