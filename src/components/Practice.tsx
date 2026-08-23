@@ -101,6 +101,9 @@ export function Practice({ pool, access, onBack }: PracticeProps) {
 
   return (
     <div className={`practice-page ${revealed ? "" : "stage"}`}>
+      <div className="scene-backdrop" aria-hidden>
+        <img src={SCENE_ART[sentence.scenario]} alt="" decoding="async" fetchPriority="high" />
+      </div>
       <div className="toolbar">
         <div className="crumbs">
           <button type="button" className="btn btn-ghost" onClick={onBack}>
@@ -139,7 +142,6 @@ export function Practice({ pool, access, onBack }: PracticeProps) {
         </div>
       </div>
       <section className="panel prompt-card">
-        <img className="scene-art" src={SCENE_ART[sentence.scenario]} alt="" />
         <h1 className="zh-line">{sentence.zh}</h1>
         <div className="action-row">
           <button
