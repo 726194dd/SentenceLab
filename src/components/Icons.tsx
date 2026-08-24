@@ -72,3 +72,71 @@ export function IconCheck() {
     </svg>
   );
 }
+
+export function IconPen() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M14.2 4.8 19.2 9.8 8.6 20.4H3.6v-5zM12.6 6.4l5 5"
+      />
+    </svg>
+  );
+}
+
+export function IconArrowRight() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M5 12h14M13 6l6 6-6 6"
+      />
+    </svg>
+  );
+}
+
+function strokeIcon(d: string) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d={d}
+      />
+    </svg>
+  );
+}
+
+export function SceneIcon({ id }: { id: string }) {
+  switch (id) {
+    case "daily":
+      return strokeIcon("M4 11 12 4.5 20 11v8.5h-5.2V14H9.2v5.5H4z");
+    case "travel":
+      return strokeIcon("M4 12 20.2 4.2 13.2 20 11.2 13.4 4 12zM11.2 13.4 20.2 4.2");
+    case "work":
+      return strokeIcon("M8 8V6.4A2.4 2.4 0 0 1 10.4 4h3.2A2.4 2.4 0 0 1 16 6.4V8M4.5 8h15v11h-15zM4.5 12h15");
+    case "study":
+      return strokeIcon("M3.8 10.2 12 6l8.2 4.2L12 14.4 3.8 10.2zM7 12.6v4.2c2 1.6 8 1.6 10 0v-4.2");
+    case "social":
+      return strokeIcon("M4.6 6.4h10.2a2 2 0 0 1 2 2v5.2a2 2 0 0 1-2 2H9.4L4.6 18.6V6.4z");
+    case "shopping":
+      return strokeIcon("M6.2 8.2h11.6l-1 11H7.2l-1-11zM9 8.2V6.6A3 3 0 0 1 12 3.6a3 3 0 0 1 3 3v1.6");
+    case "dining":
+      return strokeIcon("M6 4.5v7M8.6 4.5v7M4.8 4.5v3.4A3.2 3.2 0 0 0 8 11M6 11.5V19.5M15.4 4.5c0 3.2 2.2 3.8 2.2 7v8M17.6 4.5V19.5");
+    case "health":
+      return strokeIcon("M12 20s-6.8-4.2-8.4-8.2C2.2 8.6 4 6 6.6 6c1.6 0 2.8.9 3.4 2.1C10.6 6.9 11.8 6 13.4 6c2.6 0 4.4 2.6 3 5.8C14.8 15.8 12 20 12 20z");
+    default:
+      return strokeIcon("M5 7h14v10H5z");
+  }
+}

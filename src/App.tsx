@@ -1,8 +1,10 @@
 import { useMemo, useState } from "react";
 import { Home } from "./components/Home";
 import { Practice } from "./components/Practice";
+import { SCENARIOS } from "./data/catalog";
 import { SENTENCES } from "./data/sentences";
 import { loadFavoriteIds } from "./lib/favorites";
+import { loadDonePercent } from "./lib/progress";
 import { useAccess } from "./lib/useAccess";
 import { filterSentences } from "./lib/pool";
 import type { Level, Scenario } from "./types";
@@ -15,6 +17,14 @@ export default function App() {
   const access = useAccess();
 
   const pool = useMemo(() => filterSentences(SENTENCES, level, scenario), [level, scenario]);
+  const sceneProgress = useMemo(() => {
+    const next = {} as Record<Scenario, number>;
+    for (const item of SCENARIOS) {
+      const total = filterSentences(SENTENCES, level, item.id).length;
+      next[item.id] = loadDonePercent(level, item.id, total);
+    }
+    return next;
+  }, [level, started]);
   const favoriteIds = useMemo(() => loadFavoriteIds(), [started]);
   const favoritePool = useMemo(
     () => SENTENCES.filter((item) => favoriteIds.has(item.id)),
@@ -47,6 +57,7 @@ export default function App() {
           scenario={scenario}
           poolCount={pool.length}
           favoriteCount={favoritePool.length}
+          progress={sceneProgress}
           onLevel={setLevel}
           onScenario={setScenario}
           onStart={() => begin(false)}

@@ -49,3 +49,9 @@ export function loadCheckStats(level: string, scenario: string): CheckStats {
 export function saveCheckStats(level: string, scenario: string, stats: CheckStats): void {
   localStorage.setItem(statsKey(level, scenario), JSON.stringify(stats));
 }
+
+export function loadDonePercent(level: string, scenario: string, total: number): number {
+  if (total <= 0) return 0;
+  const done = Math.min(loadDoneIds(level, scenario).size, total);
+  return Math.round((done / total) * 100);
+}

@@ -1,11 +1,11 @@
 import type { Level, Scenario } from "../types";
 
-export const LEVELS: { id: Level; title: string; blurb: string }[] = [
-  { id: "A1", title: "入门 A1", blurb: "短句、现在时、日常用词" },
-  { id: "A2", title: "初级 A2", blurb: "过去时、请求、简单描述" },
-  { id: "B1", title: "中级 B1", blurb: "完成时、条件句、观点" },
-  { id: "B2", title: "中高 B2", blurb: "复合句、对比、委婉表达" },
-  { id: "C1", title: "高级 C1", blurb: "抽象、节奏、精确语气" },
+export const LEVELS: { id: Level; title: string; short: string; blurb: string }[] = [
+  { id: "A1", title: "入门 A1", short: "入门", blurb: "短句、现在时、日常用词" },
+  { id: "A2", title: "初级 A2", short: "初级", blurb: "过去时、请求、简单描述" },
+  { id: "B1", title: "中级 B1", short: "中级", blurb: "完成时、条件句、观点" },
+  { id: "B2", title: "中高 B2", short: "中高", blurb: "复合句、对比、委婉表达" },
+  { id: "C1", title: "高级 C1", short: "高级", blurb: "抽象、节奏、精确语气" },
 ];
 
 export const SCENARIOS: { id: Scenario; title: string; hint: string }[] = [
