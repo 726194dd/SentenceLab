@@ -40,29 +40,32 @@ export function Paywall({ onUnlock }: PaywallProps) {
 
   return (
     <div className="paywall">
-      <div className="paywall-card panel">
+      <form
+        className="paywall-card panel"
+        action="#"
+        method="post"
+        onSubmit={(event) => {
+          event.preventDefault();
+          void paid();
+        }}
+      >
         <div className="brand-kicker">{PRICE_LABEL}</div>
         <h2>试用已结束</h2>
         <div className="paywall-actions">
           <button type="button" className="btn btn-primary" onClick={pay}>
             去支付
           </button>
-          <button type="button" className="btn btn-ghost" onClick={() => void paid()} disabled={busy}>
+          <button type="submit" className="btn btn-ghost" disabled={busy}>
             我已支付
           </button>
         </div>
         <input
           className="paywall-code"
           type="text"
+          name="code"
           inputMode="text"
           value={code}
           onChange={(event) => setCode(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              event.preventDefault();
-              void paid();
-            }
-          }}
           placeholder="兑换码"
           autoCapitalize="off"
           autoCorrect="off"
@@ -70,7 +73,7 @@ export function Paywall({ onUnlock }: PaywallProps) {
           spellCheck={false}
         />
         {error ? <p className="bad-text">{error}</p> : null}
-      </div>
+      </form>
     </div>
   );
 }

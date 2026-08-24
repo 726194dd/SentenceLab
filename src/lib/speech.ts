@@ -91,11 +91,16 @@ function warmupBrowserVoices() {
   }, { once: true });
 }
 
+function canUseKokoro(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const iOS =
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  return !iOS;
+}
+
 export function warmupSpeech(): void {
   warmupBrowserVoices();
-  void loadEngine().catch(() => {
-    // Browser TTS remains available if the neural model cannot load.
-  });
 }
 
 function playBlob(blob: Blob, token: number): Promise<void> {
@@ -216,6 +221,11 @@ export async function speakEnglish(text: string): Promise<void> {
     } catch {
       cache.delete(text);
     }
+  }
+
+  if (!canUseKokoro()) {
+    await speakWithBrowser(text, token);
+    return;
   }
 
   if (!engineReady) {

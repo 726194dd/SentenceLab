@@ -61,7 +61,10 @@ body,
 }
 
 html:has(.paywall),
-body:has(.paywall) {
+body:has(.paywall),
+#root:has(.paywall) {
+  height: 100%;
+  min-height: 0;
   overflow: hidden;
   overscroll-behavior: none;
 }
