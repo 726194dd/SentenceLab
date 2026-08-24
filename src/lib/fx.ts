@@ -34,7 +34,6 @@ function htmlPlayer(name: Sfx): HTMLAudioElement {
   if (existing) return existing;
   const el = new Audio(urls[name]);
   el.preload = "auto";
-  el.playsInline = true;
   el.setAttribute("playsinline", "true");
   el.volume = 1;
   htmlPlayers[name] = el;
@@ -176,7 +175,7 @@ export function unlockFx(): void {
   htmlUnlocked = true;
   const probe = new Audio(urls.right);
   probe.preload = "auto";
-  probe.playsInline = true;
+  probe.setAttribute("playsinline", "true");
   probe.muted = true;
   void probe.play().then(() => {
     probe.pause();
