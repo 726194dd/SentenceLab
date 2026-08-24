@@ -15,7 +15,6 @@ import { DrillList } from "./DrillList";
 import { IconCheck, IconEye, IconRefresh, IconSpeaker, IconStar } from "./Icons";
 import { AnswerWords } from "./AnswerWords";
 import { NotesPanel } from "./NotesPanel";
-import { Paywall } from "./Paywall";
 import { WordBlanks } from "./WordBlanks";
 
 function ZhLine({ text }: { text: string }) {
@@ -42,10 +41,22 @@ function ZhLine({ text }: { text: string }) {
       inner.style.transform = `scale(${scale})`;
     };
 
-    fit();
-    const observer = new ResizeObserver(fit);
+    let frame = 0;
+    const schedule = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = 0;
+        fit();
+      });
+    };
+
+    schedule();
+    const observer = new ResizeObserver(schedule);
     observer.observe(box);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      if (frame) window.cancelAnimationFrame(frame);
+    };
   }, [text]);
 
   return (
@@ -182,7 +193,7 @@ export function Practice({
   };
 
   return (
-    <div className={`practice-page ${revealed ? "" : "stage"}`}>
+    <div className={`practice-page ${revealed ? "" : "stage"}`} inert={access.expired || undefined}>
       <div className="scene-backdrop" aria-hidden>
         <img src={SCENE_ART[sentence.scenario]} alt="" decoding="async" fetchPriority="high" />
       </div>
@@ -258,7 +269,7 @@ export function Practice({
           values={values}
           marks={marks}
           shake={shake}
-          autoFocus
+          autoFocus={!access.expired}
           isCorrect={result?.correct === true}
           hints={hints}
           onChange={(next) => {
@@ -297,7 +308,6 @@ export function Practice({
         </>
       ) : null}
       </div>
-      {access.expired ? <Paywall onUnlock={access.unlock} /> : null}
     </div>
   );
 }

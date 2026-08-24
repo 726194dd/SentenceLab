@@ -6,6 +6,7 @@ interface HomeProps {
   scenario: Scenario;
   poolCount: number;
   favoriteCount: number;
+  locked?: boolean;
   onLevel: (level: Level) => void;
   onScenario: (scenario: Scenario) => void;
   onStart: () => void;
@@ -17,13 +18,14 @@ export function Home({
   scenario,
   poolCount,
   favoriteCount,
+  locked = false,
   onLevel,
   onScenario,
   onStart,
   onStartFavorites,
 }: HomeProps) {
   return (
-    <div className="app-shell home">
+    <div className="app-shell home" inert={locked || undefined}>
       <header className="brand-row">
         <h1 className="brand-title">看中文 写英文</h1>
       </header>
@@ -69,7 +71,7 @@ export function Home({
       <button
         type="button"
         className="panel fav-card"
-        disabled={favoriteCount === 0}
+        disabled={locked || favoriteCount === 0}
         onClick={onStartFavorites}
       >
         <h2>收藏</h2>
@@ -77,7 +79,7 @@ export function Home({
       </button>
 
       <div className="start-row">
-        <button type="button" className="btn btn-primary" onClick={onStart} disabled={poolCount === 0}>
+        <button type="button" className="btn btn-primary" onClick={onStart} disabled={locked || poolCount === 0}>
           开始练习
         </button>
       </div>

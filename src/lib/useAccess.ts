@@ -11,30 +11,38 @@ import {
 export function useAccess() {
   const [unlocked, setUnlocked] = useState(() => isUnlocked());
   const [remain, setRemain] = useState(() => remainingMs());
+  const [expired, setExpired] = useState(() => !isUnlocked() && isTrialExpired());
 
   useEffect(() => {
-    if (unlocked) return;
-    const tick = () => setRemain(remainingMs());
+    if (unlocked || expired) return;
+    const tick = () => {
+      const next = remainingMs();
+      setRemain((prev) => (prev === next ? prev : next));
+      if (isTrialExpired()) setExpired(true);
+    };
     tick();
-    const id = window.setInterval(tick, 250);
+    const id = window.setInterval(tick, 1000);
     return () => window.clearInterval(id);
-  }, [unlocked]);
+  }, [unlocked, expired]);
 
   const startTrial = useCallback(() => {
     startTrialIfNeeded();
-    setRemain(remainingMs());
+    const next = remainingMs();
+    setRemain(next);
+    if (isTrialExpired()) setExpired(true);
   }, []);
 
   const unlock = useCallback(() => {
     unlockLocal();
     setUnlocked(true);
+    setExpired(false);
     setRemain(remainingMs());
   }, []);
 
   return {
     unlocked,
     remain,
-    expired: !unlocked && isTrialExpired(),
+    expired,
     clock: formatRemain(remain),
     startTrial,
     unlock,

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Home } from "./components/Home";
+import { Paywall } from "./components/Paywall";
 import { Practice } from "./components/Practice";
 import { SENTENCES } from "./data/sentences";
 import { loadFavoriteIds } from "./lib/favorites";
@@ -27,10 +28,12 @@ export function App() {
     setStarted(true);
   };
 
-  if (started) {
-    const active = fromFavorites ? favoritePool : pool;
-    if (active.length > 0) {
-      return (
+  const active = fromFavorites ? favoritePool : pool;
+  const practicing = started && active.length > 0;
+
+  return (
+    <>
+      {practicing ? (
         <Practice
           key={fromFavorites ? "fav" : `${level}-${scenario}`}
           pool={active}
@@ -39,20 +42,20 @@ export function App() {
           access={access}
           onBack={() => setStarted(false)}
         />
-      );
-    }
-  }
-
-  return (
-    <Home
-      level={level}
-      scenario={scenario}
-      poolCount={pool.length}
-      favoriteCount={favoritePool.length}
-      onLevel={setLevel}
-      onScenario={setScenario}
-      onStart={() => begin(false)}
-      onStartFavorites={() => begin(true)}
-    />
+      ) : (
+        <Home
+          level={level}
+          scenario={scenario}
+          poolCount={pool.length}
+          favoriteCount={favoritePool.length}
+          locked={access.expired}
+          onLevel={setLevel}
+          onScenario={setScenario}
+          onStart={() => begin(false)}
+          onStartFavorites={() => begin(true)}
+        />
+      )}
+      {access.expired ? <Paywall onUnlock={access.unlock} /> : null}
+    </>
   );
 }

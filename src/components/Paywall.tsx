@@ -53,11 +53,20 @@ export function Paywall({ onUnlock }: PaywallProps) {
         </div>
         <input
           className="paywall-code"
+          type="text"
+          inputMode="text"
           value={code}
           onChange={(event) => setCode(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              void paid();
+            }
+          }}
           placeholder="兑换码"
           autoCapitalize="off"
           autoCorrect="off"
+          autoComplete="off"
           spellCheck={false}
         />
         {error ? <p className="bad-text">{error}</p> : null}
