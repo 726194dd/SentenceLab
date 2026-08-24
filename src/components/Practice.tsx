@@ -5,7 +5,7 @@ import { answerSlots, answersOf, checkSlots, emptySlots } from "../lib/check";
 import { nextSentence } from "../lib/pool";
 import { loadFavoriteIds, toggleFavorite } from "../lib/favorites";
 import { loadCheckStats, loadDoneIds, saveCheckStats, saveDoneIds } from "../lib/progress";
-import { playCheckFx, playNextFx } from "../lib/fx";
+import { playCheckFx, playNextFx, unlockFx } from "../lib/fx";
 import { localHint, lookupHint, withRoles, type WordHint } from "../lib/wordHint";
 import { speakEnglish, stopSpeech } from "../lib/speech";
 import { useListen } from "../lib/useSpeech";
@@ -149,6 +149,7 @@ export function Practice({
     if (access.expired) return;
     const next = nextSentence(pool, sentence.id, doneIds);
     if (!next) return;
+    unlockFx();
     playNextFx();
     setSentence(next);
     setValues(emptySlots(next.en));
@@ -181,6 +182,7 @@ export function Practice({
       saveCheckStats(storeLevel, storeScenario, counted);
     }
     setResult(next);
+    unlockFx();
     playCheckFx(next.correct);
     if (next.correct) {
       if (fromEnter) holdEnter.current = true;

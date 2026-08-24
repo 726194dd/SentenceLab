@@ -1,4 +1,4 @@
-import { stopSpeech } from "./speech";
+import { hushSpeech } from "./speech";
 import nextUrl from "../assets/sfx/next02.wav";
 import rightUrl from "../assets/sfx/right01.wav";
 import wrongUrl from "../assets/sfx/wrong01.wav";
@@ -11,11 +11,12 @@ const urls: Record<Sfx, string> = {
   next: nextUrl,
 };
 
+const raw: Partial<Record<Sfx, ArrayBuffer>> = {};
 const buffers: Partial<Record<Sfx, AudioBuffer>> = {};
+const htmlPlayers: Partial<Record<Sfx, HTMLAudioElement>> = {};
 
 let ctx: AudioContext | null = null;
 let decodePromise: Promise<void> | null = null;
-let playGen = 0;
 let rightPlaying = false;
 let nextQueued = false;
 let rightSource: AudioBufferSourceNode | null = null;
@@ -28,48 +29,62 @@ function audioContext(): AudioContext | null {
   return ctx;
 }
 
-async function resume(audio: AudioContext): Promise<boolean> {
-  if (audio.state !== "running") {
-    try {
-      await audio.resume();
-    } catch {
-      return false;
-    }
-  }
-  return audio.state === "running";
+function htmlPlayer(name: Sfx): HTMLAudioElement {
+  const existing = htmlPlayers[name];
+  if (existing) return existing;
+  const el = new Audio(urls[name]);
+  el.preload = "auto";
+  el.playsInline = true;
+  el.setAttribute("playsinline", "true");
+  el.volume = 1;
+  htmlPlayers[name] = el;
+  return el;
 }
 
+function prefetch(): void {
+  (Object.keys(urls) as Sfx[]).forEach((name) => {
+    htmlPlayer(name);
+    if (raw[name]) return;
+    void fetch(urls[name])
+      .then((response) => response.arrayBuffer())
+      .then((buffer) => {
+        raw[name] = buffer;
+      })
+      .catch(() => undefined);
+  });
+}
+
+prefetch();
+
 async function decodeAll(audio: AudioContext): Promise<void> {
-  if (!decodePromise) {
-    decodePromise = Promise.all(
-      (Object.keys(urls) as Sfx[]).map(async (name) => {
-        const response = await fetch(urls[name]);
-        const raw = await response.arrayBuffer();
-        buffers[name] = await audio.decodeAudioData(raw.slice(0));
-      }),
-    ).then(() => undefined).catch(() => {
-      decodePromise = null;
-    });
+  if (decodePromise) {
+    await decodePromise;
+    return;
   }
+  decodePromise = (async () => {
+    for (const name of Object.keys(urls) as Sfx[]) {
+      if (buffers[name]) continue;
+      let data = raw[name];
+      if (!data) {
+        const response = await fetch(urls[name]);
+        data = await response.arrayBuffer();
+        raw[name] = data;
+      }
+      buffers[name] = await audio.decodeAudioData(data.slice(0));
+    }
+  })().catch(() => {
+    decodePromise = null;
+  });
   await decodePromise;
 }
 
-async function ready(): Promise<AudioContext | null> {
-  const audio = audioContext();
-  if (!audio) return null;
-  await resume(audio);
-  await decodeAll(audio);
-  if (!(await resume(audio))) return null;
-  return audio;
-}
-
-function finishRight(source: AudioBufferSourceNode): void {
-  if (rightSource !== source) return;
+function finishRight(source: AudioBufferSourceNode | null): void {
+  if (source && rightSource !== source) return;
   rightSource = null;
   rightPlaying = false;
   if (!nextQueued) return;
   nextQueued = false;
-  void start("next");
+  playNow("next");
 }
 
 function playBuffer(audio: AudioContext, name: Sfx): boolean {
@@ -87,45 +102,47 @@ function playBuffer(audio: AudioContext, name: Sfx): boolean {
 }
 
 function playHtml(name: Sfx): void {
-  const el = new Audio(urls[name]);
-  el.preload = "auto";
-  el.volume = 1;
-  if (name === "right") {
-    el.onended = () => {
-      rightPlaying = false;
-      rightSource = null;
-      if (!nextQueued) return;
-      nextQueued = false;
-      playHtml("next");
-    };
+  const el = htmlPlayer(name);
+  try {
+    el.pause();
+    el.currentTime = 0;
+  } catch {
+    // iOS may throw if metadata is not ready yet
   }
-  void el.play().catch(() => {
-    if (name !== "right") return;
-    rightPlaying = false;
-    if (!nextQueued) return;
-    nextQueued = false;
-    playHtml("next");
-  });
+  el.volume = 1;
+  el.muted = false;
+  if (name === "right") {
+    el.onended = () => finishRight(null);
+  }
+  const attempt = el.play();
+  if (attempt) {
+    void attempt.catch(() => {
+      if (name === "right") finishRight(null);
+    });
+  }
 }
 
-async function start(name: Sfx): Promise<void> {
-  const gen = playGen;
-  const audio = await ready();
-  if (gen !== playGen) return;
-  if (audio && playBuffer(audio, name)) return;
+function playNow(name: Sfx): void {
+  const audio = audioContext();
+  if (audio && audio.state !== "running") {
+    void audio.resume();
+  }
+  if (audio?.state === "running" && buffers[name] && playBuffer(audio, name)) {
+    return;
+  }
   playHtml(name);
+  if (audio) {
+    void audio.resume().then(() => {
+      void decodeAll(audio);
+    });
+  }
 }
 
 function playSfx(name: Sfx): void {
-  stopSpeech();
-
   if (name === "next" && rightPlaying) {
     nextQueued = true;
     return;
   }
-
-  playGen += 1;
-  const gen = playGen;
 
   if (name === "right") {
     nextQueued = false;
@@ -142,15 +159,30 @@ function playSfx(name: Sfx): void {
     }
   }
 
-  window.setTimeout(() => {
-    if (gen !== playGen) return;
-    void start(name);
-  }, 40);
+  playNow(name);
+  hushSpeech();
 }
+
+let htmlUnlocked = false;
 
 export function unlockFx(): void {
   if (typeof window === "undefined") return;
-  void ready();
+  const audio = audioContext();
+  if (audio && audio.state !== "running") {
+    void audio.resume();
+  }
+  if (audio) void decodeAll(audio);
+  if (htmlUnlocked) return;
+  htmlUnlocked = true;
+  const probe = new Audio(urls.right);
+  probe.preload = "auto";
+  probe.playsInline = true;
+  probe.muted = true;
+  void probe.play().then(() => {
+    probe.pause();
+  }).catch(() => {
+    htmlUnlocked = false;
+  });
 }
 
 export function playCheckFx(correct: boolean): void {

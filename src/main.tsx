@@ -2,6 +2,7 @@ import { lazy, StrictMode, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import { Paywall } from "./components/Paywall";
 import { isTrialExpired, isUnlocked } from "./lib/access";
+import { unlockFx } from "./lib/fx";
 import { useAccess } from "./lib/useAccess";
 import { warmupSpeech } from "./lib/speech";
 import "./index.css";
@@ -20,14 +21,12 @@ function Gate() {
 
 if (isUnlocked() || !isTrialExpired()) {
   warmupSpeech();
-  const unlockAudio = () => {
-    void import("./lib/fx").then((mod) => mod.unlockFx());
-    window.removeEventListener("pointerdown", unlockAudio);
-    window.removeEventListener("keydown", unlockAudio);
-  };
-  window.addEventListener("pointerdown", unlockAudio);
-  window.addEventListener("keydown", unlockAudio);
 }
+
+const armAudio = () => unlockFx();
+window.addEventListener("pointerdown", armAudio, { capture: true });
+window.addEventListener("touchstart", armAudio, { capture: true });
+window.addEventListener("keydown", armAudio, { capture: true });
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

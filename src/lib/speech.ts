@@ -51,6 +51,16 @@ export function stopSpeech(): void {
   setStatus("idle");
 }
 
+export function hushSpeech(): void {
+  playToken += 1;
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.removeAttribute("src");
+    currentAudio = null;
+  }
+  setStatus("idle");
+}
+
 async function loadEngine(): Promise<KokoroTTS> {
   if (!enginePromise) {
     enginePromise = (async () => {
