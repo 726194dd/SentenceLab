@@ -103,6 +103,21 @@ export function IconArrowRight() {
   );
 }
 
+export function IconArrowLeft() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M15 6l-6 6 6 6"
+      />
+    </svg>
+  );
+}
+
 function strokeIcon(d: string) {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">

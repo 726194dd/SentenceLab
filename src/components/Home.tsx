@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { LEVELS, SCENARIOS, scenarioLabel } from "../data/catalog";
-import { IconArrowRight, IconPen, IconStar, SceneIcon } from "./Icons";
+import { IconArrowRight, IconPen } from "./Icons";
 import type { Level, Scenario } from "../types";
 
 interface HomeProps {
@@ -16,30 +16,18 @@ interface HomeProps {
   onStartFavorites: () => void;
 }
 
-function ProgressRing({ percent }: { percent: number }) {
-  const radius = 17;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference * (1 - percent / 100);
-  const tone =
-    percent < 30 ? "var(--muted)" : percent < 60 ? "var(--clay)" : percent < 80 ? "var(--honey)" : "var(--sage)";
+function progressTone(percent: number): string {
+  if (percent < 30) return "var(--muted)";
+  if (percent < 60) return "var(--clay)";
+  if (percent < 80) return "var(--honey)";
+  return "var(--sage)";
+}
 
-  return (
-    <div className="progress-ring-wrap" aria-hidden>
-      <svg className="progress-ring" width="44" height="44" viewBox="0 0 44 44">
-        <circle className="progress-ring-bg" cx="22" cy="22" r={radius} />
-        <circle
-          className="progress-ring-fg"
-          cx="22"
-          cy="22"
-          r={radius}
-          stroke={tone}
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-        />
-      </svg>
-      <span className="progress-ring-text">{percent}%</span>
-    </div>
-  );
+function sceneCardStyle(percent: number): CSSProperties {
+  return {
+    "--scene-progress-num": percent,
+    "--scene-progress-color": progressTone(percent),
+  } as CSSProperties;
 }
 
 export function Home({
@@ -72,23 +60,27 @@ export function Home({
             <p className="brand-sub">从短句习惯表达到更细的语气和抽象说法</p>
           </div>
         </div>
-        <span className="home-badge">同一水平 · 换场景刷新</span>
       </header>
 
       <section className="home-section is-levels">
         <h2>选择水平</h2>
         <div className="level-pills">
-          {LEVELS.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              className={`level-pill ${item.id === level ? "active" : ""}`}
-              onClick={() => onLevel(item.id)}
-            >
-              <strong>{item.id}</strong>
-              {item.short}
-            </button>
-          ))}
+          {LEVELS.map((item) => {
+            const active = item.id === level;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                className={`level-pill ${active ? "active" : ""}`}
+                aria-label={`${item.id} ${item.short}`}
+                aria-pressed={active}
+                onClick={() => onLevel(item.id)}
+              >
+                <strong>{item.id}</strong>
+                <span className="level-pill-label">{item.short}</span>
+              </button>
+            );
+          })}
         </div>
       </section>
 
@@ -98,26 +90,23 @@ export function Home({
           {SCENARIOS.map((item) => {
             const active = !useFavorites && item.id === scenario;
             const keywords = item.hint.split("、");
+            const percent = progress[item.id] ?? 0;
             return (
               <button
                 key={item.id}
                 type="button"
                 className={`scene-card ${active ? "active" : ""}`}
+                style={sceneCardStyle(percent)}
                 onClick={() => {
                   setUseFavorites(false);
                   onScenario(item.id);
                 }}
               >
-                <div className="scene-card-icon">
-                  <SceneIcon id={item.id} />
+                <div className="scene-card-head">
+                  <strong className="scene-card-name">{item.title}</strong>
+                  <span className="scene-card-percent">{percent}%</span>
                 </div>
-                <strong className="scene-card-name">{item.title}</strong>
-                <span className="scene-card-tags">
-                  {keywords.map((word) => (
-                    <span key={word}>{word}</span>
-                  ))}
-                </span>
-                <ProgressRing percent={progress[item.id] ?? 0} />
+                <p className="scene-card-tags">{keywords.join(" · ")}</p>
               </button>
             );
           })}
@@ -128,11 +117,11 @@ export function Home({
             disabled={locked || favoriteCount === 0}
             onClick={() => setUseFavorites(true)}
           >
-            <span className="fav-icon">
-              <IconStar filled />
-            </span>
-            <strong className="fav-title">收藏练习</strong>
-            <span className="fav-sub">{favoriteCount > 0 ? `${favoriteCount} 句` : "还没有收藏"}</span>
+            <div className="scene-card-head">
+              <strong className="scene-card-name">收藏练习</strong>
+              <span className="scene-card-percent">{favoriteCount > 0 ? favoriteCount : 0}</span>
+            </div>
+            <p className="scene-card-tags">{favoriteCount > 0 ? `${favoriteCount} 句收藏` : "还没有收藏"}</p>
           </button>
         </div>
       </section>

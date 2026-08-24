@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { levelLabel, scenarioLabel } from "../data/catalog";
+import { scenarioLabel } from "../data/catalog";
 import { SCENE_ART } from "../data/scenes";
 import { answerSlots, answersOf, checkSlots, emptySlots } from "../lib/check";
 import { nextSentence } from "../lib/pool";
@@ -12,7 +12,7 @@ import { useListen } from "../lib/useSpeech";
 import type { Sentence, SlotCheck } from "../types";
 import type { useAccess } from "../lib/useAccess";
 import { DrillList } from "./DrillList";
-import { IconCheck, IconEye, IconRefresh, IconSpeaker, IconStar } from "./Icons";
+import { IconArrowLeft, IconCheck, IconEye, IconRefresh, IconSpeaker, IconStar } from "./Icons";
 import { AnswerWords } from "./AnswerWords";
 import { NotesPanel } from "./NotesPanel";
 import { ConfettiBurst } from "./ConfettiBurst";
@@ -205,27 +205,36 @@ export function Practice({
       </div>
       <div className="toolbar">
         <div className="crumbs">
-          <button type="button" className="btn btn-ghost" onClick={onBack}>
-            返回分类
-          </button>
-          <span className="chip">{levelLabel(sentence.level)}</span>
-          <span className="chip">{scenarioLabel(sentence.scenario)}</span>
-          <span className="chip">第 {questionNo} 题 / 共 {pool.length} 题</span>
-          {!access.unlocked && !access.expired ? (
-            <span className="chip trial-clock">{access.clock}</span>
-          ) : null}
+          <div className="crumbs-leading">
+            <button
+              type="button"
+              className="crumbs-back"
+              aria-label="返回分类"
+              onClick={onBack}
+            >
+              <IconArrowLeft />
+            </button>
+            <span className="chip chip-level" aria-label={`水平 ${sentence.level}`}>
+              {sentence.level}
+            </span>
+            <span className="chip">{scenarioLabel(sentence.scenario)}</span>
+            <span className="chip">第 {questionNo} 题 / 共 {pool.length} 题</span>
+            {!access.unlocked && !access.expired ? (
+              <span className="chip trial-clock">{access.clock}</span>
+            ) : null}
+          </div>
+          <label className="toggle">
+            <span className="toggle-text">先听读音</span>
+            <span className="switch">
+              <input
+                type="checkbox"
+                checked={listenFirst}
+                onChange={(event) => setListenFirst(event.target.checked)}
+              />
+              <span className="switch-ui" aria-hidden />
+            </span>
+          </label>
         </div>
-        <label className="toggle">
-          <span className="toggle-text">先听读音</span>
-          <span className="switch">
-            <input
-              type="checkbox"
-              checked={listenFirst}
-              onChange={(event) => setListenFirst(event.target.checked)}
-            />
-            <span className="switch-ui" aria-hidden />
-          </span>
-        </label>
       </div>
 
       <div className={`app-shell ${revealed ? "" : "stage"}`}>
