@@ -15,6 +15,7 @@ import { DrillList } from "./DrillList";
 import { IconCheck, IconEye, IconRefresh, IconSpeaker, IconStar } from "./Icons";
 import { AnswerWords } from "./AnswerWords";
 import { NotesPanel } from "./NotesPanel";
+import { ConfettiBurst } from "./ConfettiBurst";
 import { WordBlanks } from "./WordBlanks";
 
 function ZhLine({ text }: { text: string }) {
@@ -99,6 +100,7 @@ export function Practice({
   const [shake, setShake] = useState(false);
   const [listenFirst, setListenFirst] = useState(false);
   const [hints, setHints] = useState<WordHint[] | undefined>();
+  const [burst, setBurst] = useState(0);
   const [stats, setStats] = useState(() => loadCheckStats(storeLevel, storeScenario));
   const holdEnter = useRef(false);
   const listen = useListen(sentence.en);
@@ -187,6 +189,7 @@ export function Practice({
     if (next.correct) {
       if (fromEnter) holdEnter.current = true;
       setShake(false);
+      setBurst((n) => n + 1);
       markDone(sentence.id);
       return;
     }
@@ -196,6 +199,7 @@ export function Practice({
 
   return (
     <div className={`practice-page ${revealed ? "" : "stage"}`} inert={access.expired || undefined}>
+      <ConfettiBurst token={burst} />
       <div className="scene-backdrop" aria-hidden>
         <img src={SCENE_ART[sentence.scenario]} alt="" decoding="async" fetchPriority="high" />
       </div>
