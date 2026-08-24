@@ -191,3 +191,36 @@ export function playCheckFx(correct: boolean): void {
 export function playNextFx(): void {
   playSfx("next");
 }
+
+let lastTypeAt = 0;
+
+export function playTypeFx(): void {
+  const audio = audioContext();
+  if (!audio) return;
+  if (audio.state !== "running") {
+    void audio.resume();
+  }
+
+  const now = performance.now();
+  if (now - lastTypeAt < 24) return;
+  lastTypeAt = now;
+
+  try {
+    const t = audio.currentTime;
+    const gain = audio.createGain();
+    gain.connect(audio.destination);
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.231, t + 0.002);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
+
+    const osc = audio.createOscillator();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(920 + Math.random() * 180, t);
+    osc.frequency.exponentialRampToValueAtTime(520, t + 0.028);
+    osc.connect(gain);
+    osc.start(t);
+    osc.stop(t + 0.042);
+  } catch {
+    // ignore unsupported or suspended audio
+  }
+}

@@ -247,10 +247,10 @@ export async function lookupWord(token: string, vocab: VocabItem[]): Promise<Wor
   const clean = token.replace(/[^A-Za-z']/g, "");
   const key = `${clean.toLowerCase()}|${vocab.map((item) => item.word).join(",")}`;
   const hit = cache.get(key);
-  if (hit?.senses.length) return hit;
+  if (hit?.senses.length) return { ...hit, speak: clean };
 
   const vocabItem = matchVocab(clean, vocab);
-  const speak = vocabItem?.word || clean;
+  const speak = clean;
   const entry: WordEntry = {
     word: clean,
     speak,

@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef } from "react";
 import { answerSlots } from "../lib/check";
+import { playTypeFx } from "../lib/fx";
 import { posTone, type WordHint } from "../lib/wordHint";
 import type { SlotMark } from "../types";
 
@@ -68,7 +69,8 @@ export function WordBlanks({
     refs.current[next]?.focus();
   };
 
-  const writeAt = (index: number, nextValue: string) => {
+  const writeAt = (index: number, nextValue: string, playSound = false) => {
+    if (playSound) playTypeFx();
     const next = values.map((value, current) => (current === index ? nextValue : value));
     onChange(next);
   };
@@ -106,7 +108,11 @@ export function WordBlanks({
               autoCorrect="off"
               spellCheck={false}
               aria-invalid={mark === "wrong"}
-              onChange={(event) => writeAt(index, event.target.value.replace(/\s+/g, ""))}
+              onChange={(event) => {
+                const nextValue = event.target.value.replace(/\s+/g, "");
+                const prevValue = values[index] ?? "";
+                writeAt(index, nextValue, nextValue.length > prevValue.length);
+              }}
               onPaste={(event) => {
                 const pasted = event.clipboardData.getData("text");
                 const words = answerSlots(pasted);
