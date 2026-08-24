@@ -98,7 +98,7 @@ export function Practice({
   const [result, setResult] = useState<SlotCheck | null>(null);
   const [revealed, setRevealed] = useState(false);
   const [shake, setShake] = useState(false);
-  const [listenFirst, setListenFirst] = useState(false);
+  const [listenFirst, setListenFirst] = useState(true);
   const [hints, setHints] = useState<WordHint[] | undefined>();
   const [burst, setBurst] = useState(0);
   const [stats, setStats] = useState(() => loadCheckStats(storeLevel, storeScenario));
