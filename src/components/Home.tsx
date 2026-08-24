@@ -1,6 +1,6 @@
 import { useState, type CSSProperties } from "react";
 import { LEVELS, SCENARIOS, scenarioLabel } from "../data/catalog";
-import { IconArrowRight, IconPen } from "./Icons";
+import { IconArrowRight } from "./Icons";
 import type { Level, Scenario } from "../types";
 
 interface HomeProps {
@@ -49,21 +49,13 @@ export function Home({
   return (
     <div className="app-shell home" inert={locked || undefined}>
       <header className="home-header">
-        <div className="home-brand">
-          <div className="home-brand-icon">
-            <IconPen />
-          </div>
-          <div>
-            <h1 className="brand-title">
-              看中文 写<span>英文</span>
-            </h1>
-            <p className="brand-sub">从短句习惯表达到更细的语气和抽象说法</p>
-          </div>
-        </div>
+        <h1 className="brand-title">
+          听写·<span>场景英语</span>
+        </h1>
       </header>
 
       <section className="home-section is-levels">
-        <h2>选择水平</h2>
+        <h2>选择等级</h2>
         <div className="level-pills">
           {LEVELS.map((item) => {
             const active = item.id === level;

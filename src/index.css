@@ -125,32 +125,7 @@ h3 {
 }
 
 .home-header {
-  margin-bottom: 28px;
-}
-
-.home-brand {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  min-width: 0;
-}
-
-.home-brand-icon {
-  flex: 0 0 auto;
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 16px;
-  color: var(--ink);
-  background: linear-gradient(135deg, var(--honey), var(--clay));
-  box-shadow: 0 8px 20px -6px color-mix(in srgb, var(--clay) 42%, transparent);
-}
-
-.home-brand-icon svg {
-  width: 22px;
-  height: 22px;
+  margin-bottom: 24px;
 }
 
 .brand-kicker {
@@ -175,13 +150,6 @@ h3 {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-}
-
-.brand-sub {
-  max-width: 38rem;
-  color: var(--muted);
-  margin: 4px 0 0;
-  font-size: 14px;
 }
 
 .home-section {
@@ -1479,17 +1447,6 @@ h3 {
   .app-shell.home {
     padding: 20px 16px calc(88px + env(safe-area-inset-bottom, 0px));
     border-radius: 0;
-  }
-
-  .home-brand-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-  }
-
-  .home-brand-icon svg {
-    width: 18px;
-    height: 18px;
   }
 
   .brand-title {
