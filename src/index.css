@@ -520,6 +520,7 @@ h3 {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  align-items: center;
 }
 
 .scene-backdrop {
@@ -589,10 +590,15 @@ h3 {
   z-index: 1;
 }
 
+.practice-page > .toolbar {
+  align-self: stretch;
+}
+
 .practice-page > .app-shell {
   width: fit-content;
   min-width: min(640px, calc(100vw - 48px));
   max-width: calc(100vw - 48px);
+  margin-inline: auto;
 }
 
 .practice-page .btn-ghost {
@@ -603,6 +609,7 @@ h3 {
   flex: 1;
   display: flex;
   flex-direction: column;
+  align-items: center;
   justify-content: center;
   padding-top: 0;
 }
@@ -696,6 +703,9 @@ h3 {
   --zh-slot: clamp(42px, 7vw, 56px);
   --fav-space: 40px;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   width: max-content;
   min-width: min(560px, 100%);
   max-width: 100%;
@@ -844,6 +854,7 @@ h3 {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
+  align-self: center;
   gap: 14px 16px;
   padding: 8px 2px 6px;
 }
@@ -1058,6 +1069,7 @@ h3 {
   --zh-h: calc(var(--hint-size) * 1.05);
   width: max-content;
   max-width: 100%;
+  margin-inline: auto;
   gap: 20px 24px;
   padding: 12px 2px 10px;
 }
