@@ -527,10 +527,14 @@ h3 {
   top: 0;
   left: 0;
   right: 0;
-  height: min(56vh, 560px);
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  max-height: min(56vh, 560px);
   overflow: hidden;
   pointer-events: none;
   z-index: 0;
+  --backdrop-fade: 46%;
 }
 
 .scene-backdrop img {
@@ -539,21 +543,44 @@ h3 {
   height: 100%;
   object-fit: cover;
   object-position: center top;
-  -webkit-mask-image: linear-gradient(to bottom, #000 46%, transparent 100%);
-  mask-image: linear-gradient(to bottom, #000 46%, transparent 100%);
+  -webkit-mask-image: linear-gradient(
+    to top,
+    transparent 0%,
+    rgb(0 0 0 / 0.1) calc(var(--backdrop-fade) * 0.22),
+    rgb(0 0 0 / 0.32) calc(var(--backdrop-fade) * 0.42),
+    rgb(0 0 0 / 0.52) calc(var(--backdrop-fade) * 0.58),
+    rgb(0 0 0 / 0.72) calc(var(--backdrop-fade) * 0.74),
+    rgb(0 0 0 / 0.9) calc(var(--backdrop-fade) * 0.9),
+    #000 var(--backdrop-fade)
+  );
+  mask-image: linear-gradient(
+    to top,
+    transparent 0%,
+    rgb(0 0 0 / 0.1) calc(var(--backdrop-fade) * 0.22),
+    rgb(0 0 0 / 0.32) calc(var(--backdrop-fade) * 0.42),
+    rgb(0 0 0 / 0.52) calc(var(--backdrop-fade) * 0.58),
+    rgb(0 0 0 / 0.72) calc(var(--backdrop-fade) * 0.74),
+    rgb(0 0 0 / 0.9) calc(var(--backdrop-fade) * 0.9),
+    #000 var(--backdrop-fade)
+  );
 }
 
 .scene-backdrop::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    to bottom,
-    color-mix(in srgb, var(--paper) 18%, transparent) 0%,
-    transparent 22%,
-    color-mix(in srgb, var(--paper) 42%, transparent) 68%,
-    var(--paper) 100%
-  );
+  background:
+    linear-gradient(to bottom, color-mix(in srgb, var(--paper) 16%, transparent) 0%, transparent 20%),
+    linear-gradient(
+      to top,
+      var(--paper) 0%,
+      color-mix(in srgb, var(--paper) 92%, transparent) calc(var(--backdrop-fade) * 0.16),
+      color-mix(in srgb, var(--paper) 78%, transparent) calc(var(--backdrop-fade) * 0.32),
+      color-mix(in srgb, var(--paper) 58%, transparent) calc(var(--backdrop-fade) * 0.5),
+      color-mix(in srgb, var(--paper) 36%, transparent) calc(var(--backdrop-fade) * 0.68),
+      color-mix(in srgb, var(--paper) 16%, transparent) calc(var(--backdrop-fade) * 0.86),
+      transparent var(--backdrop-fade)
+    );
 }
 
 .practice-page > .toolbar,
@@ -1586,7 +1613,8 @@ h3 {
   }
 
   .scene-backdrop {
-    height: min(42vh, 360px);
+    max-height: min(42vh, 360px);
+    --backdrop-fade: 42%;
   }
 
   .practice-page.stage .app-shell {
@@ -1653,7 +1681,8 @@ h3 {
   }
 
   .scene-backdrop {
-    height: min(36vh, 220px);
+    max-height: min(36vh, 220px);
+    --backdrop-fade: 38%;
   }
 
   .paywall {
