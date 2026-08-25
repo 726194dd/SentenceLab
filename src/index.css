@@ -154,6 +154,63 @@ h3 {
   flex-wrap: wrap;
 }
 
+.home-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.home-settings-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--clay) 18%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--paper) 70%, var(--clay) 30%);
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.home-settings-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.home-settings-btn:hover,
+.home-settings-btn.active {
+  color: var(--ink);
+}
+
+.home-settings-btn.active {
+  background: var(--paper);
+  box-shadow: 0 1px 4px color-mix(in srgb, var(--ink) 10%, transparent);
+}
+
+.home-settings-btn:focus-visible {
+  outline: 2px solid var(--honey);
+  outline-offset: 2px;
+}
+
+.home-settings.home-section {
+  margin-top: -8px;
+  animation: home-settings-in 0.18s ease;
+}
+
+@keyframes home-settings-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .lang-switch {
   display: inline-flex;
   padding: 4px;

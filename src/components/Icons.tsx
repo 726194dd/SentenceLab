@@ -118,6 +118,29 @@ export function IconArrowLeft() {
   );
 }
 
+export function IconSettings() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M12 8.4a3.6 3.6 0 1 0 0 7.2 3.6 3.6 0 0 0 0-7.2z"
+      />
+      <path
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M19.4 13.5a7.4 7.4 0 0 0 .1-3l1.7-1.2-1.6-2.8-2 .5a7.5 7.5 0 0 0-2.6-1.5L14.7 3h-3.4l-.3 2.5a7.5 7.5 0 0 0-2.6 1.5l-2-.5L4.8 9.3 6.5 10.5a7.4 7.4 0 0 0 0 3L4.8 14.7l1.6 2.8 2-.5a7.5 7.5 0 0 0 2.6 1.5l.3 2.5h3.4l.3-2.5a7.5 7.5 0 0 0 2.6-1.5l2 .5 1.6-2.8-1.7-1.2z"
+      />
+    </svg>
+  );
+}
+
 function strokeIcon(d: string) {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
