@@ -185,6 +185,74 @@ h3 {
   color: var(--ink);
 }
 
+.home-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.home-setting-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 12px 14px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--paper) 82%, var(--sand) 18%);
+  border: 1px solid color-mix(in srgb, var(--clay) 12%, transparent);
+}
+
+.home-setting-card.is-off {
+  opacity: 0.72;
+}
+
+.home-setting-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.home-setting-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.home-setting.toggle {
+  margin-left: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+
+.home-setting-volume {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.home-setting-volume input[type="range"] {
+  width: 100%;
+  margin: 0;
+  accent-color: var(--honey);
+  cursor: pointer;
+}
+
+.home-setting-volume input[type="range"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.home-setting-volume-value {
+  min-width: 2.8em;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
 .brand-kicker {
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -1482,6 +1550,10 @@ h3 {
   .app-shell.home {
     padding: 28px 24px 32px;
     border-radius: 0;
+  }
+
+  .home-settings-grid {
+    grid-template-columns: 1fr;
   }
 
   .scene-grid {

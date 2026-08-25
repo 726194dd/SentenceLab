@@ -1,5 +1,6 @@
-import { useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { brandTargetLabel, levelsFor, SCENARIOS, scenarioLabel } from "../data/catalog";
+import { loadSettings, saveSettings, subscribeSettings, FX_VOLUME_MID, type AppSettings } from "../lib/settings";
 import { IconArrowRight } from "./Icons";
 import type { LanguageId, Level, Scenario } from "../types";
 
@@ -47,9 +48,12 @@ export function Home({
   onStartFavorites,
 }: HomeProps) {
   const [useFavorites, setUseFavorites] = useState(false);
+  const [settings, setSettings] = useState<AppSettings>(() => loadSettings());
   const canStart = useFavorites ? favoriteCount > 0 : poolCount > 0;
   const startLabel = useFavorites ? "练习收藏" : `练习 · ${scenarioLabel(scenario)}`;
   const levelItems = levelsFor(language);
+
+  useEffect(() => subscribeSettings(setSettings), []);
 
   return (
     <div className="app-shell home" inert={locked || undefined}>
@@ -142,6 +146,73 @@ export function Home({
             </div>
             <p className="scene-card-tags">{favoriteCount > 0 ? `${favoriteCount} 句收藏` : "还没有收藏"}</p>
           </button>
+        </div>
+      </section>
+
+      <section className="home-section home-settings">
+        <h2>设置</h2>
+        <div className="home-settings-grid">
+          <div className={`home-setting-card ${settings.clickFx ? "" : "is-off"}`}>
+            <div className="home-setting-head">
+              <span className="home-setting-title">按键音效</span>
+              <label className="home-setting toggle">
+                <span className="switch">
+                  <input
+                    type="checkbox"
+                    checked={settings.clickFx}
+                    onChange={(event) => saveSettings({ clickFx: event.target.checked })}
+                  />
+                  <span className="switch-ui" aria-hidden />
+                </span>
+              </label>
+            </div>
+            <label className="home-setting-volume">
+              <span className="sr-only">按键音效音量</span>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                step={5}
+                value={settings.clickFxVolume}
+                disabled={locked || !settings.clickFx}
+                onChange={(event) => saveSettings({ clickFxVolume: Number(event.target.value) })}
+              />
+              <span className="home-setting-volume-value">
+                {Math.round((settings.clickFxVolume / FX_VOLUME_MID) * 100)}%
+              </span>
+            </label>
+          </div>
+
+          <div className={`home-setting-card ${settings.typeFx ? "" : "is-off"}`}>
+            <div className="home-setting-head">
+              <span className="home-setting-title">打字音效</span>
+              <label className="home-setting toggle">
+                <span className="switch">
+                  <input
+                    type="checkbox"
+                    checked={settings.typeFx}
+                    onChange={(event) => saveSettings({ typeFx: event.target.checked })}
+                  />
+                  <span className="switch-ui" aria-hidden />
+                </span>
+              </label>
+            </div>
+            <label className="home-setting-volume">
+              <span className="sr-only">打字音效音量</span>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                step={5}
+                value={settings.typeFxVolume}
+                disabled={locked || !settings.typeFx}
+                onChange={(event) => saveSettings({ typeFxVolume: Number(event.target.value) })}
+              />
+              <span className="home-setting-volume-value">
+                {Math.round((settings.typeFxVolume / FX_VOLUME_MID) * 100)}%
+              </span>
+            </label>
+          </div>
         </div>
       </section>
 

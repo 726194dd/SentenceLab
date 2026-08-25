@@ -1,4 +1,5 @@
 import { hushSpeech } from "./speech";
+import { clickFxVolumeScale, isClickFxEnabled, isTypeFxEnabled, typeFxVolumeScale } from "./settings";
 import type { LanguageId } from "../types";
 import nextUrl from "../assets/sfx/next02.wav";
 import rightUrl from "../assets/sfx/right01.wav";
@@ -274,13 +275,25 @@ function playUiChirp(opts: UiChirpOptions, hush = false): void {
 }
 
 export function playClickFx(): void {
+  if (!isClickFxEnabled()) return;
+  const volume = clickFxVolumeScale();
+  if (volume <= 0) return;
   const now = performance.now();
   if (now - lastClickFxAt < 36) return;
   lastClickFxAt = now;
-  playUiChirp({ start: 700, end: 920, peak: 0.075, duration: 0.042, playbackRate: 1.48 });
+  playUiChirp({
+    start: 700,
+    end: 920,
+    peak: 0.075 * volume,
+    duration: 0.042,
+    playbackRate: 1.48,
+  });
 }
 
 export function playLangSwitchFx(lang: LanguageId): void {
+  if (!isClickFxEnabled()) return;
+  const volume = clickFxVolumeScale();
+  if (volume <= 0) return;
   const now = performance.now();
   if (now - lastClickFxAt < 36) return;
   lastClickFxAt = now;
@@ -288,7 +301,7 @@ export function playLangSwitchFx(lang: LanguageId): void {
     {
       start: lang === "ja" ? 620 : 760,
       end: lang === "ja" ? 880 : 980,
-      peak: 0.11,
+      peak: 0.11 * volume,
       duration: 0.055,
       playbackRate: lang === "ja" ? 1.35 : 1.55,
     },
@@ -320,7 +333,7 @@ export function armButtonClickFx(): void {
   );
 }
 
-function playTypeOscillator(audio: AudioContext): void {
+function playTypeOscillator(audio: AudioContext, volume: number): void {
   const now = performance.now();
   if (now - lastTypeAt < 24) return;
   lastTypeAt = now;
@@ -329,7 +342,7 @@ function playTypeOscillator(audio: AudioContext): void {
   const gain = audio.createGain();
   gain.connect(audio.destination);
   gain.gain.setValueAtTime(0.0001, t);
-  gain.gain.exponentialRampToValueAtTime(0.231, t + 0.002);
+  gain.gain.exponentialRampToValueAtTime(0.231 * volume, t + 0.002);
   gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
 
   const osc = audio.createOscillator();
@@ -342,10 +355,13 @@ function playTypeOscillator(audio: AudioContext): void {
 }
 
 export function playTypeFx(): void {
+  if (!isTypeFxEnabled()) return;
+  const volume = typeFxVolumeScale();
+  if (volume <= 0) return;
   const audio = audioContext();
   if (audio?.state === "running") {
     try {
-      playTypeOscillator(audio);
+      playTypeOscillator(audio, volume);
       return;
     } catch {
       // fall through to html fallback
@@ -356,7 +372,7 @@ export function playTypeFx(): void {
     const el = new Audio(nextUrl);
     el.preload = "auto";
     el.setAttribute("playsinline", "true");
-    el.volume = 0.14;
+    el.volume = 0.14 * volume;
     el.playbackRate = 2.6;
     void el.play().catch(() => undefined);
     void resumeAudio();
