@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Drill } from "../types";
 import { answersOf, checkSlots, emptySlots } from "../lib/check";
-import { playCheckFx } from "../lib/fx";
+import { playCheckFx, unlockFx } from "../lib/fx";
 import { useListen } from "../lib/useSpeech";
 import { IconSpeaker } from "./Icons";
 import { AnswerWords } from "./AnswerWords";
@@ -20,6 +20,7 @@ function DrillCard({ drill }: { drill: Drill }) {
   const check = () => {
     const next = checkSlots(values, answersOf(drill));
     setChecked(true);
+    unlockFx();
     playCheckFx(next.correct);
     if (next.correct) {
       setShake(false);

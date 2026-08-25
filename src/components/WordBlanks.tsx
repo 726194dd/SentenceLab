@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef } from "react";
 import { answerSlots } from "../lib/check";
-import { playTypeFx } from "../lib/fx";
+import { playTypeFx, unlockFx } from "../lib/fx";
 import { posTone, type WordHint } from "../lib/wordHint";
 import type { SlotMark } from "../types";
 
@@ -70,7 +70,10 @@ export function WordBlanks({
   };
 
   const writeAt = (index: number, nextValue: string, playSound = false) => {
-    if (playSound) playTypeFx();
+    if (playSound) {
+      unlockFx();
+      playTypeFx();
+    }
     const next = values.map((value, current) => (current === index ? nextValue : value));
     onChange(next);
   };

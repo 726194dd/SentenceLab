@@ -13,13 +13,13 @@ const urls: Record<Sfx, string> = {
 
 const raw: Partial<Record<Sfx, ArrayBuffer>> = {};
 const buffers: Partial<Record<Sfx, AudioBuffer>> = {};
-const htmlPlayers: Partial<Record<Sfx, HTMLAudioElement>> = {};
 
 let ctx: AudioContext | null = null;
 let decodePromise: Promise<void> | null = null;
 let rightPlaying = false;
 let nextQueued = false;
 let rightSource: AudioBufferSourceNode | null = null;
+let lastTypeAt = 0;
 
 function audioContext(): AudioContext | null {
   if (typeof window === "undefined") return null;
@@ -29,20 +29,17 @@ function audioContext(): AudioContext | null {
   return ctx;
 }
 
-function htmlPlayer(name: Sfx): HTMLAudioElement {
-  const existing = htmlPlayers[name];
-  if (existing) return existing;
-  const el = new Audio(urls[name]);
-  el.preload = "auto";
-  el.setAttribute("playsinline", "true");
-  el.volume = 1;
-  htmlPlayers[name] = el;
-  return el;
+function prefersHtmlSfx(): boolean {
+  if (typeof window === "undefined" || typeof navigator === "undefined") return false;
+  const coarse = window.matchMedia?.("(pointer: coarse)").matches;
+  const iOS =
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  return coarse || iOS || /Android/i.test(navigator.userAgent);
 }
 
 function prefetch(): void {
   (Object.keys(urls) as Sfx[]).forEach((name) => {
-    htmlPlayer(name);
     if (raw[name]) return;
     void fetch(urls[name])
       .then((response) => response.arrayBuffer())
@@ -77,6 +74,19 @@ async function decodeAll(audio: AudioContext): Promise<void> {
   await decodePromise;
 }
 
+async function resumeAudio(): Promise<AudioContext | null> {
+  const audio = audioContext();
+  if (!audio) return null;
+  if (audio.state === "suspended") {
+    try {
+      await audio.resume();
+    } catch {
+      return audio;
+    }
+  }
+  return audio;
+}
+
 function finishRight(source: AudioBufferSourceNode | null): void {
   if (source && rightSource !== source) return;
   rightSource = null;
@@ -101,13 +111,9 @@ function playBuffer(audio: AudioContext, name: Sfx): boolean {
 }
 
 function playHtml(name: Sfx): void {
-  const el = htmlPlayer(name);
-  try {
-    el.pause();
-    el.currentTime = 0;
-  } catch {
-    // iOS may throw if metadata is not ready yet
-  }
+  const el = new Audio(urls[name]);
+  el.preload = "auto";
+  el.setAttribute("playsinline", "true");
   el.volume = 1;
   el.muted = false;
   if (name === "right") {
@@ -122,17 +128,22 @@ function playHtml(name: Sfx): void {
 }
 
 function playNow(name: Sfx): void {
-  const audio = audioContext();
-  if (audio && audio.state !== "running") {
-    void audio.resume();
+  if (prefersHtmlSfx()) {
+    playHtml(name);
+    return;
   }
+
+  const audio = audioContext();
   if (audio?.state === "running" && buffers[name] && playBuffer(audio, name)) {
     return;
   }
+
   playHtml(name);
+
   if (audio) {
-    void audio.resume().then(() => {
-      void decodeAll(audio);
+    void resumeAudio().then((next) => {
+      if (!next) return;
+      void decodeAll(next);
     });
   }
 }
@@ -162,25 +173,27 @@ function playSfx(name: Sfx): void {
   hushSpeech();
 }
 
-let htmlUnlocked = false;
-
 export function unlockFx(): void {
   if (typeof window === "undefined") return;
-  const audio = audioContext();
-  if (audio && audio.state !== "running") {
-    void audio.resume();
-  }
-  if (audio) void decodeAll(audio);
-  if (htmlUnlocked) return;
-  htmlUnlocked = true;
-  const probe = new Audio(urls.right);
-  probe.preload = "auto";
-  probe.setAttribute("playsinline", "true");
-  probe.muted = true;
-  void probe.play().then(() => {
-    probe.pause();
-  }).catch(() => {
-    htmlUnlocked = false;
+  void resumeAudio().then((audio) => {
+    if (audio) void decodeAll(audio);
+  });
+  (Object.keys(urls) as Sfx[]).forEach((name) => {
+    const el = new Audio(urls[name]);
+    el.preload = "auto";
+    el.setAttribute("playsinline", "true");
+    el.muted = true;
+    void el.play()
+      .then(() => {
+        el.pause();
+        try {
+          el.currentTime = 0;
+        } catch {
+          // iOS may throw before metadata is ready
+        }
+        el.muted = false;
+      })
+      .catch(() => undefined);
   });
 }
 
@@ -192,35 +205,46 @@ export function playNextFx(): void {
   playSfx("next");
 }
 
-let lastTypeAt = 0;
-
-export function playTypeFx(): void {
-  const audio = audioContext();
-  if (!audio) return;
-  if (audio.state !== "running") {
-    void audio.resume();
-  }
-
+function playTypeOscillator(audio: AudioContext): void {
   const now = performance.now();
   if (now - lastTypeAt < 24) return;
   lastTypeAt = now;
 
-  try {
-    const t = audio.currentTime;
-    const gain = audio.createGain();
-    gain.connect(audio.destination);
-    gain.gain.setValueAtTime(0.0001, t);
-    gain.gain.exponentialRampToValueAtTime(0.231, t + 0.002);
-    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
+  const t = audio.currentTime;
+  const gain = audio.createGain();
+  gain.connect(audio.destination);
+  gain.gain.setValueAtTime(0.0001, t);
+  gain.gain.exponentialRampToValueAtTime(0.231, t + 0.002);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
 
-    const osc = audio.createOscillator();
-    osc.type = "triangle";
-    osc.frequency.setValueAtTime(920 + Math.random() * 180, t);
-    osc.frequency.exponentialRampToValueAtTime(520, t + 0.028);
-    osc.connect(gain);
-    osc.start(t);
-    osc.stop(t + 0.042);
-  } catch {
-    // ignore unsupported or suspended audio
+  const osc = audio.createOscillator();
+  osc.type = "triangle";
+  osc.frequency.setValueAtTime(920 + Math.random() * 180, t);
+  osc.frequency.exponentialRampToValueAtTime(520, t + 0.028);
+  osc.connect(gain);
+  osc.start(t);
+  osc.stop(t + 0.042);
+}
+
+export function playTypeFx(): void {
+  const audio = audioContext();
+  if (audio?.state === "running") {
+    try {
+      playTypeOscillator(audio);
+      return;
+    } catch {
+      // fall through to html fallback
+    }
+  }
+
+  if (prefersHtmlSfx()) {
+    const el = new Audio(nextUrl);
+    el.preload = "auto";
+    el.setAttribute("playsinline", "true");
+    el.volume = 0.14;
+    el.playbackRate = 2.6;
+    void el.play().catch(() => undefined);
+    void resumeAudio();
+    return;
   }
 }
