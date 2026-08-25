@@ -9,7 +9,6 @@ import { localHint, lookupHint, withRoles, type WordHint } from "../lib/wordHint
 import { speakTarget, stopSpeech } from "../lib/speech";
 import { useListen } from "../lib/useSpeech";
 import type { LanguageId, Sentence, SlotCheck } from "../types";
-import type { useAccess } from "../lib/useAccess";
 import { DrillList } from "./DrillList";
 import { IconArrowLeft, IconCheck, IconEye, IconRefresh, IconSpeaker, IconStar } from "./Icons";
 import { AnswerWords } from "./AnswerWords";
@@ -71,7 +70,6 @@ function ZhLine({ text }: { text: string }) {
 interface PracticeProps {
   pool: Sentence[];
   language: LanguageId;
-  access: ReturnType<typeof useAccess>;
   startId?: string;
   storageLevel?: string;
   storageScenario?: string;
@@ -81,7 +79,6 @@ interface PracticeProps {
 export function Practice({
   pool,
   language,
-  access,
   startId,
   storageLevel,
   storageScenario,
@@ -115,14 +112,10 @@ export function Practice({
   const marks = result?.marks ?? values.map(() => "idle" as const);
 
   useEffect(() => {
-    if (!listenFirst || access.expired) return;
+    if (!listenFirst) return;
     speakTarget(sentence.en, language);
     return () => stopSpeech();
-  }, [access.expired, language, listenFirst, sentence.id, sentence.en]);
-
-  useEffect(() => {
-    if (access.expired) stopSpeech();
-  }, [access.expired]);
+  }, [language, listenFirst, sentence.id, sentence.en]);
 
   useEffect(() => {
     const release = (event: KeyboardEvent) => {
@@ -151,7 +144,6 @@ export function Practice({
   }, [language, result, sentence.en, sentence.notes.vocab, slots]);
 
   const refresh = () => {
-    if (access.expired) return;
     const next = nextSentence(pool, sentence.id, doneIds);
     if (!next) return;
     unlockFx();
@@ -172,7 +164,6 @@ export function Practice({
   };
 
   const check = (fromEnter = false) => {
-    if (access.expired) return;
     if (result?.correct) {
       if (fromEnter && holdEnter.current) return;
       refresh();
@@ -201,7 +192,7 @@ export function Practice({
   };
 
   return (
-    <div className={`practice-page ${revealed ? "" : "stage"}`} inert={access.expired || undefined}>
+    <div className={`practice-page ${revealed ? "" : "stage"}`}>
       <ConfettiBurst token={burst} />
       <div className="toolbar">
         <div className="crumbs">
@@ -219,9 +210,6 @@ export function Practice({
             </span>
             <span className="chip">{scenarioLabel(sentence.scenario)}</span>
             <span className="chip">{questionNo}/{pool.length}题</span>
-            {!access.unlocked && !access.expired ? (
-              <span className="chip trial-clock">{access.clock}</span>
-            ) : null}
           </div>
           <label className="toggle">
             <span className="toggle-text">先听读音</span>
@@ -259,7 +247,7 @@ export function Practice({
             type="button"
             className="btn btn-soft"
             data-no-click-fx="true"
-            disabled={listen.disabled || access.expired}
+            disabled={listen.disabled}
             onClick={listen.toggle}
           >
             <IconSpeaker />
@@ -269,7 +257,6 @@ export function Practice({
             type="button"
             className="btn btn-ghost"
             data-no-click-fx="true"
-            disabled={access.expired}
             onClick={refresh}
           >
             <IconRefresh />
@@ -278,7 +265,6 @@ export function Practice({
           <button
             type="button"
             className="btn btn-ghost"
-            disabled={access.expired}
             onClick={() => setRevealed(true)}
           >
             <IconEye />
@@ -293,7 +279,7 @@ export function Practice({
           values={values}
           marks={marks}
           shake={shake}
-          autoFocus={!access.expired}
+          autoFocus
           isCorrect={result?.correct === true}
           hints={hints}
           onChange={(next) => {
@@ -308,7 +294,6 @@ export function Practice({
             type="button"
             className="btn btn-primary"
             data-no-click-fx="true"
-            disabled={access.expired}
             onClick={() => check(false)}
           >
             <IconCheck />

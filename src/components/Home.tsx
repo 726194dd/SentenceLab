@@ -12,7 +12,6 @@ interface HomeProps {
   poolCount: number;
   favoriteCount: number;
   progress: Record<Scenario, number>;
-  locked?: boolean;
   onLanguage: (language: LanguageId) => void;
   onLevel: (level: Level) => void;
   onScenario: (scenario: Scenario) => void;
@@ -41,7 +40,6 @@ export function Home({
   poolCount,
   favoriteCount,
   progress,
-  locked = false,
   onLanguage,
   onLevel,
   onScenario,
@@ -57,7 +55,7 @@ export function Home({
   useEffect(() => subscribeSettings(setSettings), []);
 
   return (
-    <div className="app-shell home" inert={locked || undefined}>
+    <div className="app-shell home">
       <header className="home-header">
         <div className="home-header-row">
           <h1 className="brand-title">
@@ -105,7 +103,6 @@ export function Home({
               title="按键音效"
               enabled={settings.clickFx}
               volume={settings.clickFxVolume}
-              locked={locked}
               onToggle={(clickFx) => saveSettings({ clickFx })}
               onVolume={(clickFxVolume) => saveSettings({ clickFxVolume })}
             />
@@ -113,7 +110,6 @@ export function Home({
               title="打字音效"
               enabled={settings.typeFx}
               volume={settings.typeFxVolume}
-              locked={locked}
               onToggle={(typeFx) => saveSettings({ typeFx })}
               onVolume={(typeFxVolume) => saveSettings({ typeFxVolume })}
             />
@@ -173,7 +169,7 @@ export function Home({
           <button
             type="button"
             className={`scene-card favorite-card ${useFavorites ? "active" : ""}`}
-            disabled={locked || favoriteCount === 0}
+            disabled={favoriteCount === 0}
             onClick={() => setUseFavorites(true)}
           >
             <div className="scene-card-head">
@@ -191,7 +187,7 @@ export function Home({
           className="btn btn-primary btn-start"
           data-no-click-fx="true"
           onClick={useFavorites ? onStartFavorites : onStart}
-          disabled={locked || !canStart}
+          disabled={!canStart}
         >
           <span>{canStart ? "开始练习" : "请选择场景"}</span>
         </button>

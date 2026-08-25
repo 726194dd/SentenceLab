@@ -7,7 +7,6 @@ import { loadFavoriteIds } from "./lib/favorites";
 import { loadDonePercent } from "./lib/progress";
 import { loadLanguage, loadLevelFor, saveLanguage, saveLevelFor } from "./lib/language";
 import { warmupJapaneseSpeech } from "./lib/speech";
-import { useAccess } from "./lib/useAccess";
 import { filterSentences } from "./lib/pool";
 import type { LanguageId, Level, Scenario } from "./types";
 
@@ -17,7 +16,6 @@ export default function App() {
   const [scenario, setScenario] = useState<Scenario>("daily");
   const [started, setStarted] = useState(false);
   const [fromFavorites, setFromFavorites] = useState(false);
-  const access = useAccess();
 
   const sentences = useMemo(() => getSentences(language), [language]);
   const pool = useMemo(
@@ -57,7 +55,6 @@ export default function App() {
   };
 
   const begin = (favorites: boolean) => {
-    access.startTrial();
     setFromFavorites(favorites);
     setStarted(true);
   };
@@ -74,7 +71,6 @@ export default function App() {
           language={language}
           storageLevel={fromFavorites ? "favorites" : level}
           storageScenario={fromFavorites ? "all" : scenario}
-          access={access}
           onBack={() => setStarted(false)}
         />
       ) : (

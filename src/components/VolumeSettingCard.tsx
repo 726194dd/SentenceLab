@@ -4,7 +4,6 @@ interface VolumeSettingCardProps {
   title: string;
   enabled: boolean;
   volume: number;
-  locked?: boolean;
   onToggle: (enabled: boolean) => void;
   onVolume: (volume: number) => void;
 }
@@ -19,14 +18,13 @@ export function VolumeSettingCard({
   title,
   enabled,
   volume,
-  locked = false,
   onToggle,
   onVolume,
 }: VolumeSettingCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
   const [isDragging, setIsDragging] = useState(false);
-  const canSlide = enabled && !locked;
+  const canSlide = enabled;
 
   useEffect(() => {
     const move = (event: globalThis.PointerEvent) => {
@@ -78,7 +76,6 @@ export function VolumeSettingCard({
             <input
               type="checkbox"
               checked={enabled}
-              disabled={locked}
               onChange={(event) => onToggle(event.target.checked)}
             />
             <span className="switch-ui" aria-hidden />
