@@ -222,7 +222,7 @@ export function Practice({
               {sentence.level}
             </span>
             <span className="chip">{scenarioLabel(sentence.scenario)}</span>
-            <span className="chip">第 {questionNo} 题 / 共 {pool.length} 题</span>
+            <span className="chip">{questionNo}/{pool.length}题</span>
             {!access.unlocked && !access.expired ? (
               <span className="chip trial-clock">{access.clock}</span>
             ) : null}

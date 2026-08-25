@@ -21,10 +21,10 @@ interface HomeProps {
 }
 
 function progressTone(percent: number): string {
-  if (percent < 30) return "var(--muted)";
-  if (percent < 60) return "var(--clay)";
-  if (percent < 80) return "var(--honey)";
-  return "var(--sage)";
+  if (percent < 30) return "var(--text-tertiary)";
+  if (percent < 60) return "var(--blue-soft)";
+  if (percent < 80) return "var(--blue)";
+  return "var(--success)";
 }
 
 function sceneCardStyle(percent: number): CSSProperties {
