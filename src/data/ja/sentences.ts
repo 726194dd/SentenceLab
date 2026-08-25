@@ -10,6 +10,7 @@ import { N3_MORE } from "./more/n3";
 import { N2_MORE } from "./more/n2";
 import { N1_MORE } from "./more/n1";
 
+/** Full corpus — prefer per-level imports via loadLevelSentences(). */
 export const JA_SENTENCES = [
   ...loadJaLevelMerged("N5", N5_PACK, N5_MORE),
   ...loadJaLevelMerged("N4", N4_PACK, N4_MORE),

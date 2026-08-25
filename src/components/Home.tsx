@@ -16,6 +16,7 @@ interface HomeProps {
   onLanguage: (language: LanguageId) => void;
   onLevel: (level: Level) => void;
   onScenario: (scenario: Scenario) => void;
+  onFavoritesMode?: (enabled: boolean) => void;
   onStart: () => void;
   onStartFavorites: () => void;
   dataReady?: boolean;
@@ -45,6 +46,7 @@ export function Home({
   onLanguage,
   onLevel,
   onScenario,
+  onFavoritesMode,
   onStart,
   onStartFavorites,
   dataReady = true,
@@ -173,6 +175,7 @@ export function Home({
                 style={sceneCardStyle(percent)}
                 onClick={() => {
                   setUseFavorites(false);
+                  onFavoritesMode?.(false);
                   onScenario(item.id);
                 }}
               >
@@ -189,7 +192,10 @@ export function Home({
             type="button"
             className={`scene-card favorite-card ${useFavorites ? "active" : ""}`}
             disabled={favoriteCount === 0}
-            onClick={() => setUseFavorites(true)}
+            onClick={() => {
+              setUseFavorites(true);
+              onFavoritesMode?.(true);
+            }}
           >
             <div className="scene-card-head">
               <strong className="scene-card-name">收藏练习</strong>
@@ -208,7 +214,7 @@ export function Home({
           onClick={useFavorites ? onStartFavorites : onStart}
           disabled={!dataReady || !canStart}
         >
-          <span>{!dataReady ? "加载中…" : canStart ? "开始练习" : "请选择场景"}</span>
+          <span>{!dataReady ? "首次运行加载中…" : canStart ? "开始练习" : "请选择场景"}</span>
         </button>
       </div>
     </div>

@@ -3,8 +3,9 @@ import { Home } from "./components/Home";
 import { SCENARIOS } from "./data/catalog";
 import {
   levelProgressTotals,
-  loadSentences,
-  preloadSentences,
+  loadAllSentences,
+  loadLevelSentences,
+  preloadLevelSentences,
   scenarioPoolCount,
 } from "./data/loadSentences";
 import { loadFavoriteIds } from "./lib/favorites";
@@ -29,23 +30,27 @@ export default function App() {
   const [scenario, setScenario] = useState<Scenario>("daily");
   const [started, setStarted] = useState(false);
   const [fromFavorites, setFromFavorites] = useState(false);
+  const [useFavoritesMode, setUseFavoritesMode] = useState(false);
   const [sentences, setSentences] = useState<Sentence[] | null>(null);
 
   useEffect(() => {
     let alive = true;
     setSentences(null);
-    void loadSentences(language).then((items) => {
+    const loader = useFavoritesMode
+      ? loadAllSentences(language)
+      : loadLevelSentences(language, level);
+    void loader.then((items) => {
       if (alive) setSentences(items);
     });
     return () => {
       alive = false;
     };
-  }, [language]);
+  }, [language, level, useFavoritesMode]);
 
   useEffect(() => {
-    const other: LanguageId = language === "ja" ? "en" : "ja";
-    scheduleIdle(() => preloadSentences(other));
-  }, [language]);
+    if (useFavoritesMode) return;
+    scheduleIdle(() => preloadLevelSentences(language, level));
+  }, [language, level, useFavoritesMode]);
 
   const pool = useMemo(
     () => (sentences ? filterSentences(sentences, language, level, scenario) : []),
@@ -71,11 +76,18 @@ export default function App() {
     setLanguage(lang);
     setLevel(loadLevelFor(lang));
     setStarted(false);
+    setUseFavoritesMode(false);
   };
 
   const handleLevel = (next: Level) => {
     setLevel(next);
     saveLevelFor(language, next);
+    setUseFavoritesMode(false);
+  };
+
+  const handleFavoritesMode = (enabled: boolean) => {
+    setUseFavoritesMode(enabled);
+    if (enabled) void loadAllSentences(language);
   };
 
   const begin = (favorites: boolean) => {
@@ -115,6 +127,7 @@ export default function App() {
           onLanguage={handleLanguage}
           onLevel={handleLevel}
           onScenario={setScenario}
+          onFavoritesMode={handleFavoritesMode}
           onStart={() => begin(false)}
           onStartFavorites={() => begin(true)}
         />
