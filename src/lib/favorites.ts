@@ -1,8 +1,15 @@
-const key = "sentence-lab.favorites";
+import type { LanguageId } from "../types";
 
-export function loadFavoriteIds(): Set<string> {
+function favoritesKey(lang: LanguageId): string {
+  return `sentence-lab.favorites.${lang}`;
+}
+
+const legacyKey = "sentence-lab.favorites";
+
+export function loadFavoriteIds(lang: LanguageId): Set<string> {
   try {
-    const raw = localStorage.getItem(key);
+    let raw = localStorage.getItem(favoritesKey(lang));
+    if (!raw && lang === "en") raw = localStorage.getItem(legacyKey);
     if (!raw) return new Set();
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) return new Set();
@@ -12,14 +19,14 @@ export function loadFavoriteIds(): Set<string> {
   }
 }
 
-export function saveFavoriteIds(ids: Set<string>): void {
-  localStorage.setItem(key, JSON.stringify([...ids]));
+export function saveFavoriteIds(lang: LanguageId, ids: Set<string>): void {
+  localStorage.setItem(favoritesKey(lang), JSON.stringify([...ids]));
 }
 
-export function toggleFavorite(id: string): Set<string> {
-  const next = loadFavoriteIds();
+export function toggleFavorite(lang: LanguageId, id: string): Set<string> {
+  const next = loadFavoriteIds(lang);
   if (next.has(id)) next.delete(id);
   else next.add(id);
-  saveFavoriteIds(next);
+  saveFavoriteIds(lang, next);
   return next;
 }

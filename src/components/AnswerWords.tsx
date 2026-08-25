@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import type { VocabItem } from "../types";
-import { speakEnglish } from "../lib/speech";
+import type { LanguageId, VocabItem } from "../types";
+import { speakTarget } from "../lib/speech";
 import { lookupWord, splitAnswer, translateWord, type WordEntry } from "../lib/wordLookup";
 import { useListen } from "../lib/useSpeech";
 import { IconSpeaker } from "./Icons";
@@ -8,6 +8,8 @@ import { IconSpeaker } from "./Icons";
 interface AnswerWordsProps {
   text: string;
   vocab: VocabItem[];
+  lang?: LanguageId;
+  slots?: string[];
   compact?: boolean;
 }
 
@@ -84,10 +86,10 @@ function ClickableEnglish({ text, className }: { text: string; className?: strin
   );
 }
 
-export function AnswerWords({ text, vocab, compact = false }: AnswerWordsProps) {
+export function AnswerWords({ text, vocab, lang = "en", slots, compact = false }: AnswerWordsProps) {
   const [picked, setPicked] = useState<string | null>(null);
   const [entry, setEntry] = useState<WordEntry | null>(null);
-  const listen = useListen(entry?.speak ?? "");
+  const listen = useListen(entry?.speak ?? "", lang);
   const vocabRef = useRef(vocab);
   vocabRef.current = vocab;
   const vocabKey = vocab.map((item) => `${item.word}:${item.meaning}`).join("|");
@@ -100,28 +102,33 @@ export function AnswerWords({ text, vocab, compact = false }: AnswerWordsProps) 
   useEffect(() => {
     if (!picked) return;
     let alive = true;
-    void lookupWord(picked, vocabRef.current).then((next) => {
+    void lookupWord(picked, vocabRef.current, lang).then((next) => {
       if (!alive) return;
       setEntry(next);
-      void speakEnglish(next.speak);
+      void speakTarget(next.speak, lang);
     });
     return () => {
       alive = false;
     };
-  }, [picked, vocabKey]);
+  }, [lang, picked, vocabKey]);
+
+  const parts =
+    lang === "ja" && slots?.length
+      ? slots.map((value) => ({ kind: "word" as const, value }))
+      : splitAnswer(text);
 
   return (
     <div className={`answer-words ${compact ? "compact" : ""}`}>
       <p className={compact ? "en-answer compact" : "en-answer"}>
-        {splitAnswer(text).map((part, index) =>
+        {parts.map((part, index) =>
           part.kind === "word" ? (
             <button
               key={`${part.value}-${index}`}
               type="button"
-              className={`answer-word ${picked?.toLowerCase() === part.value.toLowerCase() ? "is-on" : ""}`}
+              className={`answer-word ${picked === part.value ? "is-on" : ""}`}
               onClick={() => {
-                if (picked?.toLowerCase() === part.value.toLowerCase() && entry) {
-                  void speakEnglish(entry.speak);
+                if (picked === part.value && entry) {
+                  void speakTarget(entry.speak, lang);
                   return;
                 }
                 setPicked(part.value);

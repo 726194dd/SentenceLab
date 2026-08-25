@@ -6,17 +6,26 @@ export interface CheckStats {
   wrong: number;
 }
 
-export function progressKey(level: string, scenario: string): string {
+export function progressKey(lang: string, level: string, scenario: string): string {
+  return `${prefix}.${lang}.${level}.${scenario}`;
+}
+
+export function statsKey(lang: string, level: string, scenario: string): string {
+  return `${statsPrefix}.${lang}.${level}.${scenario}`;
+}
+
+function legacyProgressKey(level: string, scenario: string): string {
   return `${prefix}.${level}.${scenario}`;
 }
 
-export function statsKey(level: string, scenario: string): string {
+function legacyStatsKey(level: string, scenario: string): string {
   return `${statsPrefix}.${level}.${scenario}`;
 }
 
-export function loadDoneIds(level: string, scenario: string): Set<string> {
+export function loadDoneIds(lang: string, level: string, scenario: string): Set<string> {
   try {
-    const raw = localStorage.getItem(progressKey(level, scenario));
+    let raw = localStorage.getItem(progressKey(lang, level, scenario));
+    if (!raw && lang === "en") raw = localStorage.getItem(legacyProgressKey(level, scenario));
     if (!raw) return new Set();
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) return new Set();
@@ -26,13 +35,14 @@ export function loadDoneIds(level: string, scenario: string): Set<string> {
   }
 }
 
-export function saveDoneIds(level: string, scenario: string, ids: Set<string>): void {
-  localStorage.setItem(progressKey(level, scenario), JSON.stringify([...ids]));
+export function saveDoneIds(lang: string, level: string, scenario: string, ids: Set<string>): void {
+  localStorage.setItem(progressKey(lang, level, scenario), JSON.stringify([...ids]));
 }
 
-export function loadCheckStats(level: string, scenario: string): CheckStats {
+export function loadCheckStats(lang: string, level: string, scenario: string): CheckStats {
   try {
-    const raw = localStorage.getItem(statsKey(level, scenario));
+    let raw = localStorage.getItem(statsKey(lang, level, scenario));
+    if (!raw && lang === "en") raw = localStorage.getItem(legacyStatsKey(level, scenario));
     if (!raw) return { correct: 0, wrong: 0 };
     const parsed = JSON.parse(raw) as Partial<CheckStats>;
     const correct = Number(parsed.correct);
@@ -46,12 +56,12 @@ export function loadCheckStats(level: string, scenario: string): CheckStats {
   }
 }
 
-export function saveCheckStats(level: string, scenario: string, stats: CheckStats): void {
-  localStorage.setItem(statsKey(level, scenario), JSON.stringify(stats));
+export function saveCheckStats(lang: string, level: string, scenario: string, stats: CheckStats): void {
+  localStorage.setItem(statsKey(lang, level, scenario), JSON.stringify(stats));
 }
 
-export function loadDonePercent(level: string, scenario: string, total: number): number {
+export function loadDonePercent(lang: string, level: string, scenario: string, total: number): number {
   if (total <= 0) return 0;
-  const done = Math.min(loadDoneIds(level, scenario).size, total);
+  const done = Math.min(loadDoneIds(lang, level, scenario).size, total);
   return Math.round((done / total) * 100);
 }

@@ -1,5 +1,5 @@
-import type { VocabItem } from "../types";
-import { localZh, lookupWord, matchVocab } from "./wordLookup";
+import type { LanguageId, VocabItem } from "../types";
+import { localZh, lookupWord, matchJaVocab, matchVocab } from "./wordLookup";
 
 export interface WordHint {
   pos: string;
@@ -298,7 +298,78 @@ function guessPos(word: string): string {
   return "";
 }
 
-export function localHint(word: string, vocab: VocabItem[]): WordHint {
+const JA_PARTICLE_ZH: Record<string, string> = {
+  は: "主题",
+  が: "主语",
+  を: "宾语",
+  に: "方向/时间",
+  で: "方式/地点",
+  と: "和/与",
+  から: "从",
+  まで: "直到",
+  も: "也",
+  の: "的",
+  へ: "向",
+  より: "比",
+};
+
+const JA_ENDING_ZH: Record<string, string> = {
+  です: "礼貌陈述",
+  ます: "礼貌敬体",
+  でした: "过去礼貌",
+  ました: "过去敬体",
+  ません: "否定礼貌",
+  ない: "否定",
+  だ: "简体断定",
+  である: "书面断定",
+};
+
+function jaParticleNote(slot: string, matched: VocabItem): string {
+  const tail = slot.replace(/[。、！？]/g, "").replace(matched.word, "");
+  if (!tail) return "";
+  const notes = [...tail].map((char) => JA_PARTICLE_ZH[char] ?? char).filter(Boolean);
+  return notes.length ? notes.join("·") : "";
+}
+
+function guessJaPos(slot: string, matched: VocabItem | null): string {
+  const core = slot.replace(/[。、！？]/g, "").trim();
+  if (!core || slot === "。" || slot === "、") return "标点";
+  if (JA_ENDING_ZH[core]) return "句末";
+  if (!matched) return "词块";
+
+  const word = matched.word;
+  if (/^(い|な)($|[い])/.test(word) || /[い]$/.test(word)) {
+    if (word !== "ない" && !word.endsWith("ない")) return "形容词";
+  }
+  if (/^(する|来る|行く|ある|いる)/.test(word) || /[るうくすつぬぶむぐ]$/.test(word)) {
+    return "动词";
+  }
+  if (jaParticleNote(slot, matched)) return "名词";
+  return "词块";
+}
+
+function jaHintZh(slot: string, matched: VocabItem | null): string {
+  const core = slot.replace(/[。、！？]/g, "").trim();
+  if (slot === "。") return "句号";
+  if (slot === "、") return "顿号";
+  if (JA_ENDING_ZH[core]) return JA_ENDING_ZH[core];
+  if (!matched) return "";
+  const particle = jaParticleNote(slot, matched);
+  return particle ? `${matched.meaning}（${particle}）` : matched.meaning;
+}
+
+function localJaHint(slot: string, vocab: VocabItem[]): WordHint {
+  const matched = matchJaVocab(slot, vocab);
+  const pos = guessJaPos(slot, matched);
+  return {
+    pos,
+    phonetic: matched?.word ?? "",
+    zh: jaHintZh(slot, matched),
+  };
+}
+
+export function localHint(word: string, vocab: VocabItem[], lang: LanguageId = "en"): WordHint {
+  if (lang === "ja") return localJaHint(word, vocab);
   const clean = cleanWord(word);
   const key = clean.toLowerCase();
   return {
@@ -313,13 +384,15 @@ export function posTone(pos: string): string {
   if (pos === "动词" || pos === "谓语") return "verb";
   if (pos === "定语") return "art";
   if (pos === "状语") return "adv";
-  if (pos === "助动词") return "aux";
+  if (pos === "助动词" || pos === "句末") return "aux";
   if (pos === "形容词") return "adj";
   if (pos === "副词") return "adv";
   if (pos === "冠词" || pos === "限定词") return "art";
   if (pos === "代词") return "pron";
-  if (pos === "介词") return "prep";
+  if (pos === "介词" || pos === "助词") return "prep";
   if (pos === "连词") return "conj";
+  if (pos === "词块") return "noun";
+  if (pos === "标点") return "other";
   return "other";
 }
 
@@ -343,8 +416,13 @@ export function withRoles(words: string[], hints: WordHint[]): WordHint[] {
   });
 }
 
-export async function lookupHint(word: string, vocab: VocabItem[]): Promise<WordHint> {
-  const seed = localHint(word, vocab);
+export async function lookupHint(
+  word: string,
+  vocab: VocabItem[],
+  lang: LanguageId = "en",
+): Promise<WordHint> {
+  const seed = localHint(word, vocab, lang);
+  if (lang === "ja") return seed;
   const entry = await lookupWord(word, vocab);
   return {
     pos: seed.pos || entry.senses[0]?.pos || "名词",

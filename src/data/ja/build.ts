@@ -1,47 +1,53 @@
-import type { Drill, Level, Scenario, Sentence } from "../types";
+import type { Drill, JaLevel, Scenario, Sentence } from "../../types";
 
-type DrillTuple = [focus: string, zh: string, en: string, hint: string, alts?: string[]];
+type JaDrillTuple = [focus: string, zh: string, target: string, slots: string[], hint: string, alts?: string[]];
 
-export type GroupItem = {
+export type JaGroupItem = {
   zh: string;
-  en: string;
-  alts?: string[];
+  target: string;
+  slots: string[];
   vocab: string[][];
   tips?: string;
+  alts?: string[];
+  altSlots?: string[][];
 };
 
-export type SentenceGroup = {
+export type JaSentenceGroup = {
   structure: string;
   grammar: string[];
   tips: string;
-  items: GroupItem[];
+  items: JaGroupItem[];
 };
 
-export function s(
+export function jaS(
   id: string,
-  level: Level,
+  level: JaLevel,
   scenario: Scenario,
   zh: string,
-  en: string,
+  target: string,
+  slots: string[],
   notes: Sentence["notes"],
-  drills: DrillTuple[],
+  drills: JaDrillTuple[],
   alts: string[] = [],
+  _altSlots: string[][] = [],
 ): Sentence {
   return {
-    id,
-    lang: "en",
+    id: `ja-${id}`,
+    lang: "ja",
     level,
     scenario,
     zh,
-    en,
+    en: target,
+    slots,
     alts: alts.length ? alts : undefined,
     notes,
     drills: drills.map(
-      ([focus, drillZh, drillEn, hint, drillAlts], index): Drill => ({
-        id: `${id}-d${index + 1}`,
+      ([focus, drillZh, drillTarget, drillSlots, hint, drillAlts], index): Drill => ({
+        id: `ja-${id}-d${index + 1}`,
         focus,
         zh: drillZh,
-        en: drillEn,
+        en: drillTarget,
+        slots: drillSlots,
         hint,
         alts: drillAlts,
       }),
@@ -49,10 +55,10 @@ export function s(
   };
 }
 
-export function packGroups(
-  level: Level,
+export function packJaGroups(
+  level: JaLevel,
   scenario: Scenario,
-  groups: SentenceGroup[],
+  groups: JaSentenceGroup[],
   startAt = 5,
 ): Sentence[] {
   const sentences: Sentence[] = [];
@@ -68,26 +74,25 @@ export function packGroups(
       const focusB = group.grammar[1] ?? focusA;
 
       sentences.push(
-        s(
+        jaS(
           `${level.toLowerCase()}-${scenario}-${n}`,
           level,
           scenario,
           item.zh,
-          item.en,
+          item.target,
+          item.slots,
           {
             structure: group.structure,
             grammar: group.grammar,
-            vocab: item.vocab.map(([word, meaning]) => ({
-              word: word ?? "",
-              meaning: meaning ?? "",
-            })),
+            vocab: item.vocab.map(([word, meaning]) => ({ word: word ?? "", meaning: meaning ?? "" })),
             tips: item.tips ?? group.tips,
           },
           [
-            [focusA, first.zh, first.en, focusA, first.alts],
-            [focusB, second.zh, second.en, focusB, second.alts],
+            [focusA, first.zh, first.target, first.slots, focusA, first.alts],
+            [focusB, second.zh, second.target, second.slots, focusB, second.alts],
           ],
           item.alts ?? [],
+          item.altSlots ?? [],
         ),
       );
       n += 1;

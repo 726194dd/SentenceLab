@@ -1,15 +1,15 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { scenarioLabel } from "../data/catalog";
 import { SCENE_ART } from "../data/scenes";
-import { answerSlots, answersOf, checkSlots, emptySlots } from "../lib/check";
+import { answerSlots, answersOf, checkSlots, emptySlots, sentenceSlots } from "../lib/check";
 import { nextSentence } from "../lib/pool";
 import { loadFavoriteIds, toggleFavorite } from "../lib/favorites";
 import { loadCheckStats, loadDoneIds, saveCheckStats, saveDoneIds } from "../lib/progress";
 import { playCheckFx, playNextFx, unlockFx } from "../lib/fx";
 import { localHint, lookupHint, withRoles, type WordHint } from "../lib/wordHint";
-import { speakEnglish, stopSpeech } from "../lib/speech";
+import { speakTarget, stopSpeech } from "../lib/speech";
 import { useListen } from "../lib/useSpeech";
-import type { Sentence, SlotCheck } from "../types";
+import type { LanguageId, Sentence, SlotCheck } from "../types";
 import type { useAccess } from "../lib/useAccess";
 import { DrillList } from "./DrillList";
 import { IconArrowLeft, IconCheck, IconEye, IconRefresh, IconSpeaker, IconStar } from "./Icons";
@@ -71,6 +71,7 @@ function ZhLine({ text }: { text: string }) {
 
 interface PracticeProps {
   pool: Sentence[];
+  language: LanguageId;
   access: ReturnType<typeof useAccess>;
   startId?: string;
   storageLevel?: string;
@@ -80,6 +81,7 @@ interface PracticeProps {
 
 export function Practice({
   pool,
+  language,
   access,
   startId,
   storageLevel,
@@ -87,23 +89,24 @@ export function Practice({
   onBack,
 }: PracticeProps) {
   const seed = pool[0];
-  const storeLevel = storageLevel ?? seed?.level ?? "A1";
+  const storeLevel = storageLevel ?? seed?.level ?? (language === "ja" ? "N5" : "A1");
   const storeScenario = storageScenario ?? seed?.scenario ?? "daily";
-  const [doneIds, setDoneIds] = useState(() => loadDoneIds(storeLevel, storeScenario));
-  const [saved, setSaved] = useState(() => loadFavoriteIds());
+  const [doneIds, setDoneIds] = useState(() => loadDoneIds(language, storeLevel, storeScenario));
+  const [saved, setSaved] = useState(() => loadFavoriteIds(language));
   const [sentence, setSentence] = useState<Sentence>(
     () => pool.find((item) => item.id === startId) ?? nextSentence(pool, undefined, doneIds)!,
   );
-  const [values, setValues] = useState(() => emptySlots(sentence.en));
+  const slots = sentenceSlots(sentence);
+  const [values, setValues] = useState(() => emptySlots(sentence.en, slots));
   const [result, setResult] = useState<SlotCheck | null>(null);
   const [revealed, setRevealed] = useState(false);
   const [shake, setShake] = useState(false);
   const [listenFirst, setListenFirst] = useState(true);
   const [hints, setHints] = useState<WordHint[] | undefined>();
   const [burst, setBurst] = useState(0);
-  const [stats, setStats] = useState(() => loadCheckStats(storeLevel, storeScenario));
+  const [stats, setStats] = useState(() => loadCheckStats(language, storeLevel, storeScenario));
   const holdEnter = useRef(false);
-  const listen = useListen(sentence.en);
+  const listen = useListen(sentence.en, language);
   const doneCount = Math.min(doneIds.size, pool.length);
   const questionNo = Math.min(pool.length, doneIds.has(sentence.id) ? doneCount : doneCount + 1);
   const attempted = stats.correct + stats.wrong;
@@ -114,9 +117,9 @@ export function Practice({
 
   useEffect(() => {
     if (!listenFirst || access.expired) return;
-    speakEnglish(sentence.en);
+    speakTarget(sentence.en, language);
     return () => stopSpeech();
-  }, [access.expired, listenFirst, sentence.id, sentence.en]);
+  }, [access.expired, language, listenFirst, sentence.id, sentence.en]);
 
   useEffect(() => {
     if (access.expired) stopSpeech();
@@ -135,17 +138,18 @@ export function Practice({
       setHints(undefined);
       return;
     }
-    const slots = answerSlots(sentence.en);
+    const slotWords = answerSlots(sentence.en, slots);
     const vocab = sentence.notes.vocab;
-    setHints(withRoles(slots, slots.map((word) => localHint(word, vocab))));
+    const baseHints = slotWords.map((word) => localHint(word, vocab, language));
+    setHints(language === "ja" ? baseHints : withRoles(slotWords, baseHints));
     let alive = true;
-    void Promise.all(slots.map((word) => lookupHint(word, vocab))).then((next) => {
-      if (alive) setHints(withRoles(slots, next));
+    void Promise.all(slotWords.map((word) => lookupHint(word, vocab, language))).then((next) => {
+      if (alive) setHints(withRoles(slotWords, next));
     });
     return () => {
       alive = false;
     };
-  }, [result, sentence.en, sentence.notes.vocab]);
+  }, [language, result, sentence.en, sentence.notes.vocab, slots]);
 
   const refresh = () => {
     if (access.expired) return;
@@ -154,7 +158,7 @@ export function Practice({
     unlockFx();
     playNextFx();
     setSentence(next);
-    setValues(emptySlots(next.en));
+    setValues(emptySlots(next.en, sentenceSlots(next)));
     setResult(null);
     setRevealed(false);
     setShake(false);
@@ -165,7 +169,7 @@ export function Practice({
     const next = new Set(doneIds);
     next.add(id);
     setDoneIds(next);
-    saveDoneIds(storeLevel, storeScenario, next);
+    saveDoneIds(language, storeLevel, storeScenario, next);
   };
 
   const check = (fromEnter = false) => {
@@ -175,13 +179,13 @@ export function Practice({
       refresh();
       return;
     }
-    const next = checkSlots(values, answers);
+    const next = checkSlots(values, answers, slots, language);
     if (!result) {
       const counted = next.correct
         ? { correct: stats.correct + 1, wrong: stats.wrong }
         : { correct: stats.correct, wrong: stats.wrong + 1 };
       setStats(counted);
-      saveCheckStats(storeLevel, storeScenario, counted);
+      saveCheckStats(language, storeLevel, storeScenario, counted);
     }
     setResult(next);
     unlockFx();
@@ -249,7 +253,7 @@ export function Practice({
           className={`fav-btn ${saved.has(sentence.id) ? "is-on" : ""}`}
           aria-label={saved.has(sentence.id) ? "取消收藏" : "收藏"}
           aria-pressed={saved.has(sentence.id)}
-          onClick={() => setSaved(toggleFavorite(sentence.id))}
+          onClick={() => setSaved(toggleFavorite(language, sentence.id))}
         >
           <IconStar filled={saved.has(sentence.id)} />
         </button>
@@ -281,6 +285,8 @@ export function Practice({
         <WordBlanks
           key={sentence.id}
           target={sentence.en}
+          slotSegments={slots}
+          lang={language}
           values={values}
           marks={marks}
           shake={shake}
@@ -303,11 +309,11 @@ export function Practice({
         {revealed ? (
           <div className="answer-reveal">
             <div className="brand-kicker">参考答案</div>
-            <AnswerWords text={sentence.en} vocab={sentence.notes.vocab} />
+            <AnswerWords text={sentence.en} vocab={sentence.notes.vocab} lang={language} slots={slots} />
             {sentence.alts?.map((alt) => (
               <div className="answer-alt" key={alt}>
                 <span className="hint-line">也可接受</span>
-                <AnswerWords text={alt} vocab={sentence.notes.vocab} compact />
+                <AnswerWords text={alt} vocab={sentence.notes.vocab} lang={language} compact />
               </div>
             ))}
           </div>
@@ -318,7 +324,7 @@ export function Practice({
         <>
           <NotesPanel sentence={sentence} />
           <div className="panel" style={{ marginTop: 18 }}>
-            <DrillList drills={sentence.drills} />
+            <DrillList drills={sentence.drills} lang={language} />
           </div>
         </>
       ) : null}

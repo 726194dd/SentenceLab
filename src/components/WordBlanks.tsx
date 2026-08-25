@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef } from "react";
 import { answerSlots } from "../lib/check";
 import { playTypeFx, unlockFx } from "../lib/fx";
 import { posTone, type WordHint } from "../lib/wordHint";
-import type { SlotMark } from "../types";
+import type { LanguageId, SlotMark } from "../types";
 
 function FitHint({ className, text }: { className: string; text: string }) {
   const boxRef = useRef<HTMLSpanElement>(null);
@@ -37,6 +37,8 @@ function FitHint({ className, text }: { className: string; text: string }) {
 
 interface WordBlanksProps {
   target: string;
+  slotSegments?: string[];
+  lang?: LanguageId;
   values: string[];
   marks: SlotMark[];
   autoFocus?: boolean;
@@ -50,6 +52,8 @@ interface WordBlanksProps {
 
 export function WordBlanks({
   target,
+  slotSegments,
+  lang = "en",
   values,
   marks,
   autoFocus = false,
@@ -60,9 +64,19 @@ export function WordBlanks({
   onChange,
   onSubmit,
 }: WordBlanksProps) {
-  const slots = answerSlots(target);
+  const slots = answerSlots(target, slotSegments);
   const refs = useRef<Array<HTMLInputElement | null>>([]);
   const showHints = Boolean(hints && !compact);
+  const fillLabel = lang === "ja" ? "按词块填写日语" : "按词填写英文";
+
+  const distributeJaPaste = (pasted: string): string[] => {
+    let cursor = 0;
+    return slots.map((segment) => {
+      const chunk = pasted.slice(cursor, cursor + segment.length);
+      cursor += segment.length;
+      return chunk;
+    });
+  };
 
   const focusAt = (index: number) => {
     const next = Math.max(0, Math.min(index, slots.length - 1));
@@ -82,7 +96,7 @@ export function WordBlanks({
     <div
       className={`word-blanks ${compact ? "compact" : ""} ${shake ? "is-shake" : ""} ${showHints ? "has-slots" : ""}`}
       role="group"
-      aria-label="按词填写英文"
+      aria-label={fillLabel}
     >
       {slots.map((word, index) => {
         const mark = marks[index] ?? "idle";
@@ -112,12 +126,21 @@ export function WordBlanks({
               spellCheck={false}
               aria-invalid={mark === "wrong"}
               onChange={(event) => {
-                const nextValue = event.target.value.replace(/\s+/g, "");
+                const raw = event.target.value;
+                const nextValue = lang === "ja" ? raw.replace(/\s+/g, "") : raw.replace(/\s+/g, "");
                 const prevValue = values[index] ?? "";
                 writeAt(index, nextValue, nextValue.length > prevValue.length);
               }}
               onPaste={(event) => {
-                const pasted = event.clipboardData.getData("text");
+                const pasted = event.clipboardData.getData("text").trim();
+                if (!pasted) return;
+                if (lang === "ja" && slots.length > 1) {
+                  event.preventDefault();
+                  const next = distributeJaPaste(pasted.replace(/\s+/g, ""));
+                  onChange(next);
+                  focusAt(slots.length - 1);
+                  return;
+                }
                 const words = answerSlots(pasted);
                 if (words.length <= 1) return;
                 event.preventDefault();

@@ -1,4 +1,4 @@
-import type { VocabItem } from "../types";
+import type { LanguageId, VocabItem } from "../types";
 import { tokenize } from "./check";
 
 export interface WordSense {
@@ -147,6 +147,21 @@ function stems(word: string): string[] {
   return [...new Set(out)];
 }
 
+export function matchJaVocab(slot: string, vocab: VocabItem[]): VocabItem | null {
+  const core = slot.replace(/[。、！？]/g, "").trim();
+  if (!core) return null;
+
+  const exact = vocab.find((item) => item.word === core);
+  if (exact) return exact;
+
+  let best: VocabItem | null = null;
+  for (const item of vocab) {
+    if (!item.word || !core.includes(item.word)) continue;
+    if (!best || item.word.length > best.word.length) best = item;
+  }
+  return best;
+}
+
 export function matchVocab(token: string, vocab: VocabItem[]): VocabItem | null {
   const keys = stems(token);
   const exact = vocab.find((item) => keys.includes(item.word.toLowerCase()));
@@ -243,7 +258,21 @@ export async function translateWord(token: string): Promise<string> {
   return fetchZh(query);
 }
 
-export async function lookupWord(token: string, vocab: VocabItem[]): Promise<WordEntry> {
+export async function lookupWord(
+  token: string,
+  vocab: VocabItem[],
+  lang: LanguageId = "en",
+): Promise<WordEntry> {
+  if (lang === "ja") {
+    const vocabItem = matchVocab(token, vocab) ?? matchVocab(token.trim(), vocab);
+    return {
+      word: token,
+      speak: token,
+      zh: vocabItem?.meaning ?? "",
+      senses: vocabItem ? [{ pos: "", meaning: vocabItem.meaning }] : [],
+    };
+  }
+
   const clean = token.replace(/[^A-Za-z']/g, "");
   const key = `${clean.toLowerCase()}|${vocab.map((item) => item.word).join(",")}`;
   const hit = cache.get(key);

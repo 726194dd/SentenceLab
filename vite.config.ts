@@ -5,6 +5,6 @@ export default defineConfig({
   base: process.env.BASE_PATH || "/",
   plugins: [react()],
   optimizeDeps: {
-    exclude: ["kokoro-js"],
+    exclude: ["kokoro-js", "kokoro-js-jp"],
   },
 });

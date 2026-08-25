@@ -1,4 +1,4 @@
-import type { Sentence } from "../types";
+import type { LanguageId, Sentence } from "../types";
 import { A1 } from "./a1";
 import { A2 } from "./a2";
 import { B1 } from "./b1";
@@ -10,8 +10,9 @@ import { B1_PACK } from "./more/b1";
 import { B2_PACK } from "./more/b2";
 import { C1_PACK } from "./more/c1";
 import { loadLevel } from "./more/load";
+import { JA_SENTENCES } from "./ja/sentences";
 
-export const SENTENCES: Sentence[] = [
+const RAW_EN: Omit<Sentence, "lang">[] = [
   ...A1,
   ...A2,
   ...B1,
@@ -23,3 +24,11 @@ export const SENTENCES: Sentence[] = [
   ...loadLevel("B2", B2_PACK),
   ...loadLevel("C1", C1_PACK),
 ];
+
+export const EN_SENTENCES: Sentence[] = RAW_EN.map((item) => ({ ...item, lang: "en" as const }));
+
+export function getSentences(lang: LanguageId): Sentence[] {
+  return lang === "ja" ? JA_SENTENCES : EN_SENTENCES;
+}
+
+export const SENTENCES = EN_SENTENCES;

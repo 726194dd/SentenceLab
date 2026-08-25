@@ -1,4 +1,5 @@
 import type { SlotCheck } from "../types";
+import type { LanguageId } from "../types";
 
 export function tokenize(text: string): string[] {
   return text
@@ -13,7 +14,8 @@ export function normalize(text: string): string {
   return tokenize(text).join(" ");
 }
 
-export function answerSlots(text: string): string[] {
+export function answerSlots(text: string, preset?: string[]): string[] {
+  if (preset?.length) return preset;
   return text
     .replace(/[“”"‘’`]/g, "'")
     .split(/\s+/)
@@ -21,14 +23,28 @@ export function answerSlots(text: string): string[] {
     .filter(Boolean);
 }
 
-export function emptySlots(target: string): string[] {
-  return answerSlots(target).map(() => "");
+export function emptySlots(target: string, preset?: string[]): string[] {
+  return answerSlots(target, preset).map(() => "");
 }
 
-export function checkSlots(values: string[], answers: string[]): SlotCheck {
-  const primary = answerSlots(answers[0] ?? "");
-  const joined = normalize(values.join(" "));
-  const exact = answers.some((answer) => normalize(answer) === joined);
+function slotMatch(given: string, expected: string, lang: LanguageId): boolean {
+  if (lang === "ja") return given.trim() === expected.trim();
+  return normalize(given) === normalize(expected);
+}
+
+export function checkSlots(
+  values: string[],
+  answers: string[],
+  preset?: string[],
+  lang: LanguageId = "en",
+): SlotCheck {
+  const primary = answerSlots(answers[0] ?? "", preset);
+  const joined = lang === "ja" ? values.map((v) => v.trim()).join("") : normalize(values.join(" "));
+  const exact = answers.some((answer) => {
+    const slots = answerSlots(answer, preset);
+    if (lang === "ja") return slots.map((s, i) => slotMatch(values[i] ?? "", s, lang)).every(Boolean) && slots.length > 0;
+    return normalize(answer) === joined;
+  });
 
   if (exact && primary.length > 0) {
     return {
@@ -39,7 +55,7 @@ export function checkSlots(values: string[], answers: string[]): SlotCheck {
   }
 
   const marks = primary.map((word, index) =>
-    normalize(values[index] ?? "") === normalize(word) ? "ok" : "wrong",
+    slotMatch(values[index] ?? "", word, lang) ? "ok" : "wrong",
   );
   const wrongCount = marks.filter((mark) => mark === "wrong").length;
 
@@ -52,4 +68,8 @@ export function checkSlots(values: string[], answers: string[]): SlotCheck {
 
 export function answersOf(sentence: { en: string; alts?: string[] }): string[] {
   return [sentence.en, ...(sentence.alts ?? [])];
+}
+
+export function sentenceSlots(sentence: { en: string; slots?: string[] }): string[] | undefined {
+  return sentence.slots;
 }

@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "kokoro-js": "^1.2.1",
+    "kokoro-js-jp": "^0.2.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },

@@ -1,4 +1,9 @@
-export type Level = "A1" | "A2" | "B1" | "B2" | "C1";
+export type LanguageId = "en" | "ja";
+
+export type EnLevel = "A1" | "A2" | "B1" | "B2" | "C1";
+export type JaLevel = "N5" | "N4" | "N3" | "N2" | "N1";
+export type Level = EnLevel | JaLevel;
+
 export type Scenario =
   | "daily"
   | "travel"
@@ -21,14 +26,17 @@ export interface Drill {
   en: string;
   hint: string;
   alts?: string[];
+  slots?: string[];
 }
 
 export interface Sentence {
   id: string;
+  lang: LanguageId;
   level: Level;
   scenario: Scenario;
   zh: string;
   en: string;
+  slots?: string[];
   alts?: string[];
   notes: {
     structure: string;

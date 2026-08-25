@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { currentSpeechText, speakEnglish, stopSpeech, subscribeSpeech, type SpeechStatus } from "./speech";
+import type { LanguageId } from "../types";
+import { currentSpeechText, speakTarget, stopSpeech, subscribeSpeech, type SpeechStatus } from "./speech";
 
 export function useSpeech(): { status: SpeechStatus; text: string | null } {
   const [status, setStatus] = useState<SpeechStatus>("idle");
@@ -27,7 +28,7 @@ export function speechButtonLabel(status: SpeechStatus): string {
   return "Listen";
 }
 
-export function useListen(phrase: string) {
+export function useListen(phrase: string, lang: LanguageId = "en") {
   const { status, text } = useSpeech();
   const active = text === phrase;
 
@@ -39,7 +40,7 @@ export function useListen(phrase: string) {
         stopSpeech();
         return;
       }
-      void speakEnglish(phrase);
+      void speakTarget(phrase, lang);
     },
   };
 }

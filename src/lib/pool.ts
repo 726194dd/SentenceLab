@@ -1,11 +1,12 @@
-import type { Level, Scenario, Sentence } from "../types";
+import type { LanguageId, Level, Scenario, Sentence } from "../types";
 
 export function filterSentences(
   all: Sentence[],
+  lang: LanguageId,
   level: Level,
   scenario: Scenario,
 ): Sentence[] {
-  return all.filter((item) => item.level === level && item.scenario === scenario);
+  return all.filter((item) => item.lang === lang && item.level === level && item.scenario === scenario);
 }
 
 export function nextSentence(

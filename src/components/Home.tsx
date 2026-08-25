@@ -1,15 +1,17 @@
 import { useState, type CSSProperties } from "react";
-import { LEVELS, SCENARIOS, scenarioLabel } from "../data/catalog";
+import { brandTargetLabel, levelsFor, SCENARIOS, scenarioLabel } from "../data/catalog";
 import { IconArrowRight } from "./Icons";
-import type { Level, Scenario } from "../types";
+import type { LanguageId, Level, Scenario } from "../types";
 
 interface HomeProps {
+  language: LanguageId;
   level: Level;
   scenario: Scenario;
   poolCount: number;
   favoriteCount: number;
   progress: Record<Scenario, number>;
   locked?: boolean;
+  onLanguage: (language: LanguageId) => void;
   onLevel: (level: Level) => void;
   onScenario: (scenario: Scenario) => void;
   onStart: () => void;
@@ -31,12 +33,14 @@ function sceneCardStyle(percent: number): CSSProperties {
 }
 
 export function Home({
+  language,
   level,
   scenario,
   poolCount,
   favoriteCount,
   progress,
   locked = false,
+  onLanguage,
   onLevel,
   onScenario,
   onStart,
@@ -45,19 +49,40 @@ export function Home({
   const [useFavorites, setUseFavorites] = useState(false);
   const canStart = useFavorites ? favoriteCount > 0 : poolCount > 0;
   const startLabel = useFavorites ? "练习收藏" : `练习 · ${scenarioLabel(scenario)}`;
+  const levelItems = levelsFor(language);
 
   return (
     <div className="app-shell home" inert={locked || undefined}>
       <header className="home-header">
-        <h1 className="brand-title">
-          听写·<span>场景英语</span>
-        </h1>
+        <div className="home-header-row">
+          <h1 className="brand-title">
+            听写·<span>{brandTargetLabel(language)}</span>
+          </h1>
+          <div className="lang-switch" role="group" aria-label="选择语言">
+            <button
+              type="button"
+              className={`lang-switch-btn ${language === "en" ? "active" : ""}`}
+              aria-pressed={language === "en"}
+              onClick={() => onLanguage("en")}
+            >
+              英语
+            </button>
+            <button
+              type="button"
+              className={`lang-switch-btn ${language === "ja" ? "active" : ""}`}
+              aria-pressed={language === "ja"}
+              onClick={() => onLanguage("ja")}
+            >
+              日语
+            </button>
+          </div>
+        </div>
       </header>
 
       <section className="home-section is-levels">
         <h2>选择等级</h2>
         <div className="level-pills">
-          {LEVELS.map((item) => {
+          {levelItems.map((item) => {
             const active = item.id === level;
             return (
               <button
