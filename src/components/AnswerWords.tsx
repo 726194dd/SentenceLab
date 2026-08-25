@@ -3,7 +3,7 @@ import type { LanguageId, VocabItem } from "../types";
 import { speakTarget } from "../lib/speech";
 import { lookupWord, splitAnswer, translateWord, type WordEntry } from "../lib/wordLookup";
 import { useListen } from "../lib/useSpeech";
-import { IconSpeaker } from "./Icons";
+import { ListenIcon } from "./Icons";
 
 interface AnswerWordsProps {
   text: string;
@@ -147,7 +147,7 @@ export function AnswerWords({ text, vocab, lang = "en", slots, compact = false }
             <strong>{entry.word}</strong>
             {entry.phonetic ? <span className="word-phonetic">{entry.phonetic}</span> : null}
             <button type="button" className="btn btn-soft" disabled={listen.disabled} onClick={listen.toggle}>
-              <IconSpeaker />
+              <ListenIcon loading={listen.loading} />
               {listen.label}
             </button>
           </div>

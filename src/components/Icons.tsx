@@ -13,6 +13,30 @@ export function IconSpeaker() {
   );
 }
 
+export function IconSpinner() {
+  return (
+    <svg className="icon-spinner" viewBox="0 0 24 24" aria-hidden="true">
+      {Array.from({ length: 8 }, (_, index) => (
+        <rect
+          key={index}
+          className="icon-spinner-bar"
+          x="11"
+          y="4"
+          width="2"
+          height="5"
+          rx="1"
+          transform={`rotate(${index * 45} 12 12)`}
+          style={{ animationDelay: `${-index * 0.125}s` }}
+        />
+      ))}
+    </svg>
+  );
+}
+
+export function ListenIcon({ loading = false }: { loading?: boolean }) {
+  return loading ? <IconSpinner /> : <IconSpeaker />;
+}
+
 export function IconRefresh() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">

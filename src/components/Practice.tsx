@@ -10,7 +10,7 @@ import { speakTarget, stopSpeech, warmupJapaneseSpeech } from "../lib/speech";
 import { useListen } from "../lib/useSpeech";
 import type { LanguageId, Sentence, SlotCheck } from "../types";
 import { DrillList } from "./DrillList";
-import { IconArrowLeft, IconCheck, IconEye, IconRefresh, IconSpeaker, IconStar } from "./Icons";
+import { IconArrowLeft, IconCheck, IconEye, IconRefresh, IconStar, ListenIcon } from "./Icons";
 import { AnswerWords } from "./AnswerWords";
 import { NotesPanel } from "./NotesPanel";
 import { ConfettiBurst } from "./ConfettiBurst";
@@ -254,7 +254,7 @@ export function Practice({
             disabled={listen.disabled}
             onClick={listen.toggle}
           >
-            <IconSpeaker />
+            <ListenIcon loading={listen.loading} />
             {listen.label}
           </button>
           <button
