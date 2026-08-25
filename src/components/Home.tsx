@@ -1,8 +1,9 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { brandTargetLabel, levelsFor, SCENARIOS } from "../data/catalog";
 import { loadSettings, saveSettings, subscribeSettings, type AppSettings } from "../lib/settings";
 import { IconSettings } from "./Icons";
 import { VolumeSettingCard } from "./VolumeSettingCard";
+import { TipCard } from "./TipCard";
 import type { LanguageId, Level, Scenario } from "../types";
 
 interface HomeProps {
@@ -49,10 +50,24 @@ export function Home({
   const [useFavorites, setUseFavorites] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settings, setSettings] = useState<AppSettings>(() => loadSettings());
+  const settingsRef = useRef<HTMLElement>(null);
+  const settingsBtnRef = useRef<HTMLButtonElement>(null);
   const canStart = useFavorites ? favoriteCount > 0 : poolCount > 0;
   const levelItems = levelsFor(language);
 
   useEffect(() => subscribeSettings(setSettings), []);
+
+  useEffect(() => {
+    if (!settingsOpen) return;
+    const closeOnOutside = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (settingsRef.current?.contains(target)) return;
+      if (settingsBtnRef.current?.contains(target)) return;
+      setSettingsOpen(false);
+    };
+    document.addEventListener("pointerdown", closeOnOutside);
+    return () => document.removeEventListener("pointerdown", closeOnOutside);
+  }, [settingsOpen]);
 
   return (
     <div className="app-shell home">
@@ -83,6 +98,7 @@ export function Home({
               </button>
             </div>
             <button
+              ref={settingsBtnRef}
               type="button"
               className={`home-settings-btn ${settingsOpen ? "active" : ""}`}
               aria-label="设置"
@@ -96,7 +112,7 @@ export function Home({
       </header>
 
       {settingsOpen ? (
-        <section className="home-section home-settings">
+        <section ref={settingsRef} className="home-section home-settings">
           <h2 className="sr-only">设置</h2>
           <div className="home-settings-grid">
             <VolumeSettingCard
@@ -114,6 +130,7 @@ export function Home({
               onVolume={(typeFxVolume) => saveSettings({ typeFxVolume })}
             />
           </div>
+          <TipCard />
         </section>
       ) : null}
 

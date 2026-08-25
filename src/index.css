@@ -276,6 +276,111 @@ h3 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+  margin-bottom: 10px;
+}
+
+.home-tip-card {
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--blue-muted), color-mix(in srgb, var(--blue-muted) 55%, #fff));
+  border: 1px solid color-mix(in srgb, var(--blue) 16%, var(--border));
+}
+
+.home-tip-title {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: var(--font-title);
+  color: var(--blue-deep);
+}
+
+.home-tip-text {
+  margin: 0 0 14px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.home-tip-amounts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.home-tip-amount {
+  border: 1px solid color-mix(in srgb, var(--blue) 22%, var(--border));
+  border-radius: var(--radius-md);
+  background: #fff;
+  color: var(--blue-deep);
+  font: inherit;
+  font-size: 16px;
+  font-weight: var(--font-display);
+  padding: 12px 8px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.home-tip-amount:hover {
+  border-color: var(--blue);
+  background: var(--blue-muted);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.home-tip-amount:active {
+  transform: translateY(0);
+}
+
+.home-tip-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.home-tip-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: color-mix(in srgb, var(--text-primary) 36%, transparent);
+  cursor: pointer;
+}
+
+.home-tip-modal-card {
+  position: relative;
+  z-index: 1;
+  width: min(320px, 100%);
+  text-align: center;
+  padding: 20px 18px 16px;
+}
+
+.home-tip-modal-title {
+  margin: 0 0 6px;
+  font-size: 18px;
+  font-weight: var(--font-title);
+  color: var(--text-primary);
+}
+
+.home-tip-modal-hint {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+
+.home-tip-qr {
+  display: block;
+  width: min(220px, 70vw);
+  height: auto;
+  margin: 0 auto 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: #fff;
+}
+
+.home-tip-modal-close {
+  width: 100%;
 }
 
 .home-setting-card {
