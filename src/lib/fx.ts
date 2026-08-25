@@ -49,7 +49,11 @@ function prefersHtmlSfx(): boolean {
   return coarse || iOS || /Android/i.test(navigator.userAgent);
 }
 
+let prefetchStarted = false;
+
 function prefetch(): void {
+  if (prefetchStarted) return;
+  prefetchStarted = true;
   (Object.keys(urls) as Sfx[]).forEach((name) => {
     if (raw[name]) return;
     void fetch(urls[name])
@@ -60,8 +64,6 @@ function prefetch(): void {
       .catch(() => undefined);
   });
 }
-
-prefetch();
 
 async function decodeAll(audio: AudioContext): Promise<void> {
   if (decodePromise) {
@@ -186,6 +188,7 @@ function playSfx(name: Sfx): void {
 
 export function unlockFx(): void {
   if (typeof window === "undefined") return;
+  prefetch();
   void resumeAudio().then((audio) => {
     if (audio) void decodeAll(audio);
   });

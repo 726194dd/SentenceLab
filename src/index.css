@@ -50,7 +50,7 @@
   --navy: var(--text-secondary);
   --shadow: var(--shadow-lg);
 
-  --font: "Inter", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --font: "PingFang SC", "Microsoft YaHei", "Segoe UI", system-ui, sans-serif;
   --font-ui: 400;
   --font-body: 500;
   --font-title: 600;

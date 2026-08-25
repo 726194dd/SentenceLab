@@ -6,7 +6,7 @@ import { loadFavoriteIds, toggleFavorite } from "../lib/favorites";
 import { loadCheckStats, loadDoneIds, saveCheckStats, saveDoneIds } from "../lib/progress";
 import { playCheckFx, playNextFx, unlockFx } from "../lib/fx";
 import { localHint, lookupHint, withRoles, type WordHint } from "../lib/wordHint";
-import { speakTarget, stopSpeech } from "../lib/speech";
+import { speakTarget, stopSpeech, warmupJapaneseSpeech } from "../lib/speech";
 import { useListen } from "../lib/useSpeech";
 import type { LanguageId, Sentence, SlotCheck } from "../types";
 import { DrillList } from "./DrillList";
@@ -110,6 +110,10 @@ export function Practice({
 
   const answers = useMemo(() => answersOf(sentence), [sentence]);
   const marks = result?.marks ?? values.map(() => "idle" as const);
+
+  useEffect(() => {
+    if (language === "ja") warmupJapaneseSpeech();
+  }, [language]);
 
   useEffect(() => {
     if (!listenFirst) return;
@@ -326,3 +330,5 @@ export function Practice({
     </div>
   );
 }
+
+export default Practice;

@@ -18,6 +18,7 @@ interface HomeProps {
   onScenario: (scenario: Scenario) => void;
   onStart: () => void;
   onStartFavorites: () => void;
+  dataReady?: boolean;
 }
 
 function progressTone(percent: number): string {
@@ -46,6 +47,7 @@ export function Home({
   onScenario,
   onStart,
   onStartFavorites,
+  dataReady = true,
 }: HomeProps) {
   const [useFavorites, setUseFavorites] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -204,9 +206,9 @@ export function Home({
           className="btn btn-primary btn-start"
           data-no-click-fx="true"
           onClick={useFavorites ? onStartFavorites : onStart}
-          disabled={!canStart}
+          disabled={!dataReady || !canStart}
         >
-          <span>{canStart ? "开始练习" : "请选择场景"}</span>
+          <span>{!dataReady ? "加载中…" : canStart ? "开始练习" : "请选择场景"}</span>
         </button>
       </div>
     </div>
