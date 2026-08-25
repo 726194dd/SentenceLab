@@ -8,6 +8,13 @@ export type TipTier = {
   qrSrc: string;
 };
 
+function resolvePublicUrl(path: string | undefined, fallback: string): string {
+  const raw = path?.trim() || fallback;
+  if (/^https?:\/\//i.test(raw)) return raw;
+  const normalized = raw.startsWith("/") ? raw.slice(1) : raw;
+  return `${import.meta.env.BASE_URL}${normalized}`;
+}
+
 function tier(
   amount: TipAmount,
   payUrl: string | undefined,
@@ -16,7 +23,7 @@ function tier(
   return {
     amount,
     payUrl: payUrl ?? "",
-    qrSrc: qrSrc ?? `/tips/${amount}.jpg`,
+    qrSrc: resolvePublicUrl(qrSrc, `tips/${amount}.jpg`),
   };
 }
 
