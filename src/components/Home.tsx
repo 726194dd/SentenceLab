@@ -1,7 +1,8 @@
 import { useEffect, useState, type CSSProperties } from "react";
-import { brandTargetLabel, levelsFor, SCENARIOS, scenarioLabel } from "../data/catalog";
-import { loadSettings, saveSettings, subscribeSettings, FX_VOLUME_MID, type AppSettings } from "../lib/settings";
-import { IconArrowRight, IconSettings } from "./Icons";
+import { brandTargetLabel, levelsFor, SCENARIOS } from "../data/catalog";
+import { loadSettings, saveSettings, subscribeSettings, type AppSettings } from "../lib/settings";
+import { IconSettings } from "./Icons";
+import { VolumeSettingCard } from "./VolumeSettingCard";
 import type { LanguageId, Level, Scenario } from "../types";
 
 interface HomeProps {
@@ -51,7 +52,6 @@ export function Home({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settings, setSettings] = useState<AppSettings>(() => loadSettings());
   const canStart = useFavorites ? favoriteCount > 0 : poolCount > 0;
-  const startLabel = useFavorites ? "练习收藏" : `练习 · ${scenarioLabel(scenario)}`;
   const levelItems = levelsFor(language);
 
   useEffect(() => subscribeSettings(setSettings), []);
@@ -64,15 +64,6 @@ export function Home({
             听写·<span>{brandTargetLabel(language)}</span>
           </h1>
           <div className="home-header-actions">
-            <button
-              type="button"
-              className={`home-settings-btn ${settingsOpen ? "active" : ""}`}
-              aria-label="设置"
-              aria-expanded={settingsOpen}
-              onClick={() => setSettingsOpen((open) => !open)}
-            >
-              <IconSettings />
-            </button>
             <div className="lang-switch" role="group" aria-label="选择语言">
               <button
                 type="button"
@@ -93,6 +84,15 @@ export function Home({
                 日语
               </button>
             </div>
+            <button
+              type="button"
+              className={`home-settings-btn ${settingsOpen ? "active" : ""}`}
+              aria-label="设置"
+              aria-expanded={settingsOpen}
+              onClick={() => setSettingsOpen((open) => !open)}
+            >
+              <IconSettings />
+            </button>
           </div>
         </div>
       </header>
@@ -101,67 +101,22 @@ export function Home({
         <section className="home-section home-settings">
           <h2 className="sr-only">设置</h2>
           <div className="home-settings-grid">
-            <div className={`home-setting-card ${settings.clickFx ? "" : "is-off"}`}>
-              <div className="home-setting-head">
-                <span className="home-setting-title">按键音效</span>
-                <label className="home-setting toggle">
-                  <span className="switch">
-                    <input
-                      type="checkbox"
-                      checked={settings.clickFx}
-                      onChange={(event) => saveSettings({ clickFx: event.target.checked })}
-                    />
-                    <span className="switch-ui" aria-hidden />
-                  </span>
-                </label>
-              </div>
-              <label className="home-setting-volume">
-                <span className="sr-only">按键音效音量</span>
-                <input
-                  type="range"
-                  min={0}
-                  max={100}
-                  step={5}
-                  value={settings.clickFxVolume}
-                  disabled={locked || !settings.clickFx}
-                  onChange={(event) => saveSettings({ clickFxVolume: Number(event.target.value) })}
-                />
-                <span className="home-setting-volume-value">
-                  {Math.round((settings.clickFxVolume / FX_VOLUME_MID) * 100)}%
-                </span>
-              </label>
-            </div>
-
-            <div className={`home-setting-card ${settings.typeFx ? "" : "is-off"}`}>
-              <div className="home-setting-head">
-                <span className="home-setting-title">打字音效</span>
-                <label className="home-setting toggle">
-                  <span className="switch">
-                    <input
-                      type="checkbox"
-                      checked={settings.typeFx}
-                      onChange={(event) => saveSettings({ typeFx: event.target.checked })}
-                    />
-                    <span className="switch-ui" aria-hidden />
-                  </span>
-                </label>
-              </div>
-              <label className="home-setting-volume">
-                <span className="sr-only">打字音效音量</span>
-                <input
-                  type="range"
-                  min={0}
-                  max={100}
-                  step={5}
-                  value={settings.typeFxVolume}
-                  disabled={locked || !settings.typeFx}
-                  onChange={(event) => saveSettings({ typeFxVolume: Number(event.target.value) })}
-                />
-                <span className="home-setting-volume-value">
-                  {Math.round((settings.typeFxVolume / FX_VOLUME_MID) * 100)}%
-                </span>
-              </label>
-            </div>
+            <VolumeSettingCard
+              title="按键音效"
+              enabled={settings.clickFx}
+              volume={settings.clickFxVolume}
+              locked={locked}
+              onToggle={(clickFx) => saveSettings({ clickFx })}
+              onVolume={(clickFxVolume) => saveSettings({ clickFxVolume })}
+            />
+            <VolumeSettingCard
+              title="打字音效"
+              enabled={settings.typeFx}
+              volume={settings.typeFxVolume}
+              locked={locked}
+              onToggle={(typeFx) => saveSettings({ typeFx })}
+              onVolume={(typeFxVolume) => saveSettings({ typeFxVolume })}
+            />
           </div>
         </section>
       ) : null}
@@ -238,8 +193,7 @@ export function Home({
           onClick={useFavorites ? onStartFavorites : onStart}
           disabled={locked || !canStart}
         >
-          <span>{canStart ? startLabel : "请选择场景"}</span>
-          <IconArrowRight />
+          <span>{canStart ? "开始练习" : "请选择场景"}</span>
         </button>
       </div>
     </div>
