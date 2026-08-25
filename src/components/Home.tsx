@@ -63,6 +63,7 @@ export function Home({
               type="button"
               className={`lang-switch-btn ${language === "en" ? "active" : ""}`}
               aria-pressed={language === "en"}
+              data-click-fx="lang-en"
               onClick={() => onLanguage("en")}
             >
               英语
@@ -71,6 +72,7 @@ export function Home({
               type="button"
               className={`lang-switch-btn ${language === "ja" ? "active" : ""}`}
               aria-pressed={language === "ja"}
+              data-click-fx="lang-ja"
               onClick={() => onLanguage("ja")}
             >
               日语
@@ -147,6 +149,7 @@ export function Home({
         <button
           type="button"
           className="btn btn-primary btn-start"
+          data-no-click-fx="true"
           onClick={useFavorites ? onStartFavorites : onStart}
           disabled={locked || !canStart}
         >

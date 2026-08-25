@@ -1,4 +1,5 @@
 import { hushSpeech } from "./speech";
+import type { LanguageId } from "../types";
 import nextUrl from "../assets/sfx/next02.wav";
 import rightUrl from "../assets/sfx/right01.wav";
 import wrongUrl from "../assets/sfx/wrong01.wav";
@@ -20,6 +21,15 @@ let rightPlaying = false;
 let nextQueued = false;
 let rightSource: AudioBufferSourceNode | null = null;
 let lastTypeAt = 0;
+let lastClickFxAt = 0;
+
+type UiChirpOptions = {
+  start: number;
+  end: number;
+  peak?: number;
+  duration?: number;
+  playbackRate?: number;
+};
 
 function audioContext(): AudioContext | null {
   if (typeof window === "undefined") return null;
@@ -203,6 +213,111 @@ export function playCheckFx(correct: boolean): void {
 
 export function playNextFx(): void {
   playSfx("next");
+}
+
+function playUiChirpOscillator(audio: AudioContext, opts: UiChirpOptions): void {
+  const peak = opts.peak ?? 0.09;
+  const duration = opts.duration ?? 0.048;
+  const t = audio.currentTime;
+  const gain = audio.createGain();
+  gain.connect(audio.destination);
+  gain.gain.setValueAtTime(0.0001, t);
+  gain.gain.exponentialRampToValueAtTime(peak, t + 0.003);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+
+  const osc = audio.createOscillator();
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(opts.start, t);
+  osc.frequency.exponentialRampToValueAtTime(opts.end, t + duration * 0.5);
+  osc.connect(gain);
+  osc.start(t);
+  osc.stop(t + duration + 0.003);
+}
+
+function playUiChirp(opts: UiChirpOptions, hush = false): void {
+  if (hush) hushSpeech();
+
+  const audio = audioContext();
+  if (audio?.state === "running") {
+    try {
+      playUiChirpOscillator(audio, opts);
+      return;
+    } catch {
+      // fall through to html fallback
+    }
+  }
+
+  const playbackRate = opts.playbackRate ?? 1.5;
+
+  if (prefersHtmlSfx()) {
+    const el = new Audio(nextUrl);
+    el.preload = "auto";
+    el.setAttribute("playsinline", "true");
+    el.volume = Math.min(0.12, (opts.peak ?? 0.09) * 1.1);
+    el.playbackRate = playbackRate;
+    void el.play().catch(() => undefined);
+    void resumeAudio();
+    return;
+  }
+
+  void resumeAudio().then((ctx) => {
+    if (!ctx) return;
+    try {
+      playUiChirpOscillator(ctx, opts);
+    } catch {
+      const el = new Audio(nextUrl);
+      el.volume = Math.min(0.12, (opts.peak ?? 0.09) * 1.1);
+      el.playbackRate = playbackRate;
+      void el.play().catch(() => undefined);
+    }
+  });
+}
+
+export function playClickFx(): void {
+  const now = performance.now();
+  if (now - lastClickFxAt < 36) return;
+  lastClickFxAt = now;
+  playUiChirp({ start: 700, end: 920, peak: 0.075, duration: 0.042, playbackRate: 1.48 });
+}
+
+export function playLangSwitchFx(lang: LanguageId): void {
+  const now = performance.now();
+  if (now - lastClickFxAt < 36) return;
+  lastClickFxAt = now;
+  playUiChirp(
+    {
+      start: lang === "ja" ? 620 : 760,
+      end: lang === "ja" ? 880 : 980,
+      peak: 0.11,
+      duration: 0.055,
+      playbackRate: lang === "ja" ? 1.35 : 1.55,
+    },
+    true,
+  );
+}
+
+export function armButtonClickFx(): void {
+  if (typeof document === "undefined") return;
+
+  document.addEventListener(
+    "click",
+    (event) => {
+      const button =
+        event.target instanceof Element ? event.target.closest("button") : null;
+      if (!button || button.disabled || button.dataset.noClickFx === "true") return;
+
+      unlockFx();
+
+      if (button.classList.contains("lang-switch-btn")) {
+        if (button.getAttribute("aria-pressed") === "true") return;
+        playLangSwitchFx(button.dataset.clickFx === "lang-ja" ? "ja" : "en");
+        return;
+      }
+
+      playClickFx();
+    },
+    { capture: true },
+  );
 }
 
 function playTypeOscillator(audio: AudioContext): void {

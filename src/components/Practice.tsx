@@ -262,13 +262,20 @@ export function Practice({
           <button
             type="button"
             className="btn btn-soft"
+            data-no-click-fx="true"
             disabled={listen.disabled || access.expired}
             onClick={listen.toggle}
           >
             <IconSpeaker />
             {listen.label}
           </button>
-          <button type="button" className="btn btn-ghost" disabled={access.expired} onClick={refresh}>
+          <button
+            type="button"
+            className="btn btn-ghost"
+            data-no-click-fx="true"
+            disabled={access.expired}
+            onClick={refresh}
+          >
             <IconRefresh />
             Next
           </button>
@@ -301,7 +308,13 @@ export function Practice({
           onSubmit={() => check(true)}
         />
         <div className="action-row">
-          <button type="button" className="btn btn-primary" disabled={access.expired} onClick={() => check(false)}>
+          <button
+            type="button"
+            className="btn btn-primary"
+            data-no-click-fx="true"
+            disabled={access.expired}
+            onClick={() => check(false)}
+          >
             <IconCheck />
             Check
           </button>
