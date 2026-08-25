@@ -1,4 +1,4 @@
-export const TIP_AMOUNTS = [1, 2, 5, 10] as const;
+export const TIP_AMOUNTS = [4, 6, 8, 10] as const;
 
 export type TipAmount = (typeof TIP_AMOUNTS)[number];
 
@@ -7,6 +7,8 @@ export type TipTier = {
   payUrl: string;
   qrSrc: string;
 };
+
+const DEFAULT_QR = "tips/wechat.png";
 
 function resolvePublicUrl(path: string | undefined, fallback: string): string {
   const raw = path?.trim() || fallback;
@@ -23,15 +25,17 @@ function tier(
   return {
     amount,
     payUrl: payUrl ?? "",
-    qrSrc: resolvePublicUrl(qrSrc, `tips/${amount}.jpg`),
+    qrSrc: resolvePublicUrl(qrSrc, DEFAULT_QR),
   };
 }
 
+const sharedQr = import.meta.env.VITE_TIP_QR;
+
 export const TIP_TIERS: TipTier[] = [
-  tier(1, import.meta.env.VITE_TIP_URL_1, import.meta.env.VITE_TIP_QR_1),
-  tier(2, import.meta.env.VITE_TIP_URL_2, import.meta.env.VITE_TIP_QR_2),
-  tier(5, import.meta.env.VITE_TIP_URL_5, import.meta.env.VITE_TIP_QR_5),
-  tier(10, import.meta.env.VITE_TIP_URL_10, import.meta.env.VITE_TIP_QR_10),
+  tier(4, import.meta.env.VITE_TIP_URL_4, sharedQr),
+  tier(6, import.meta.env.VITE_TIP_URL_6, sharedQr),
+  tier(8, import.meta.env.VITE_TIP_URL_8, sharedQr),
+  tier(10, import.meta.env.VITE_TIP_URL_10, sharedQr),
 ];
 
 export function tipLabel(amount: TipAmount): string {

@@ -12,7 +12,6 @@ const listeners = new Set<(status: SpeechStatus) => void>();
 let status: SpeechStatus = "idle";
 let activeText: string | null = null;
 let enginePromise: Promise<KokoroJP> | null = null;
-let engineReady = false;
 let currentAudio: HTMLAudioElement | null = null;
 let playToken = 0;
 
@@ -74,18 +73,14 @@ async function loadEngine(): Promise<KokoroJP> {
       if (hasGpu) {
         try {
           const engine = await KokoroJP.load({ ...base, device: "webgpu" });
-          engineReady = true;
           return engine;
         } catch {
           // Some machines advertise GPU but fail at runtime.
         }
       }
-      const engine = await KokoroJP.load({ ...base, device: "wasm" });
-      engineReady = true;
-      return engine;
+      return KokoroJP.load({ ...base, device: "wasm" });
     })().catch((error) => {
       enginePromise = null;
-      engineReady = false;
       throw error;
     });
   }
@@ -334,16 +329,11 @@ export async function speakEnglish(text: string): Promise<void> {
     return;
   }
 
-  if (!engineReady) {
-    void loadEngine();
-    await speakWithBrowser(text, token);
-    return;
-  }
-
+  setStatus("loading");
   try {
     await synthesizeWithKokoro(text, EN_VOICE, "en", token);
   } catch {
     if (token !== playToken) return;
-    await speakWithBrowser(text, token);
+    setStatus("idle");
   }
 }

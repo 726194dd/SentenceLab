@@ -6,14 +6,11 @@ declare module "*.wav" {
 }
 
 interface ImportMetaEnv {
-  readonly VITE_TIP_URL_1?: string;
-  readonly VITE_TIP_URL_2?: string;
-  readonly VITE_TIP_URL_5?: string;
+  readonly VITE_TIP_URL_4?: string;
+  readonly VITE_TIP_URL_6?: string;
+  readonly VITE_TIP_URL_8?: string;
   readonly VITE_TIP_URL_10?: string;
-  readonly VITE_TIP_QR_1?: string;
-  readonly VITE_TIP_QR_2?: string;
-  readonly VITE_TIP_QR_5?: string;
-  readonly VITE_TIP_QR_10?: string;
+  readonly VITE_TIP_QR?: string;
 }
 
 interface ImportMeta {

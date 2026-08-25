@@ -34,6 +34,7 @@ export function useListen(phrase: string, lang: LanguageId = "en") {
 
   return {
     label: active ? speechButtonLabel(status) : "Listen",
+    loading: active && status === "loading",
     disabled: status === "loading" && active,
     toggle() {
       if (active && (status === "speaking" || status === "loading")) {

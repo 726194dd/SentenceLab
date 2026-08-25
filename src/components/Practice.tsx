@@ -249,7 +249,7 @@ export function Practice({
         <div className="action-row tools">
           <button
             type="button"
-            className="btn btn-soft"
+            className={`btn btn-soft${listen.loading ? " is-loading" : ""}`}
             data-no-click-fx="true"
             disabled={listen.disabled}
             onClick={listen.toggle}
