@@ -96,6 +96,12 @@ body,
   width: 100%;
   min-height: 100dvh;
   align-items: stretch;
+  background: #fff;
+}
+
+html:has(.app-shell.home),
+body:has(.app-shell.home) {
+  background: #fff;
 }
 
 html:has(.paywall),
@@ -151,13 +157,15 @@ h3 {
 }
 
 .app-shell.home {
-  width: min(1100px, calc(100% - 32px));
+  width: min(1100px, 100%);
   padding: 40px 48px 48px;
+  padding-left: max(48px, env(safe-area-inset-left, 0px));
+  padding-right: max(48px, env(safe-area-inset-right, 0px));
   text-align: left;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-md);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 @media (min-width: 641px) {
@@ -813,67 +821,7 @@ h3 {
   display: flex;
   flex-direction: column;
   align-items: center;
-}
-
-.scene-backdrop {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  height: auto;
-  max-height: min(56vh, 560px);
-  overflow: hidden;
-  pointer-events: none;
-  z-index: 0;
-  --backdrop-fade: 46%;
-}
-
-.scene-backdrop img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center top;
-  -webkit-mask-image: linear-gradient(
-    to top,
-    transparent 0%,
-    rgb(0 0 0 / 0.1) calc(var(--backdrop-fade) * 0.22),
-    rgb(0 0 0 / 0.32) calc(var(--backdrop-fade) * 0.42),
-    rgb(0 0 0 / 0.52) calc(var(--backdrop-fade) * 0.58),
-    rgb(0 0 0 / 0.72) calc(var(--backdrop-fade) * 0.74),
-    rgb(0 0 0 / 0.9) calc(var(--backdrop-fade) * 0.9),
-    #000 var(--backdrop-fade)
-  );
-  mask-image: linear-gradient(
-    to top,
-    transparent 0%,
-    rgb(0 0 0 / 0.1) calc(var(--backdrop-fade) * 0.22),
-    rgb(0 0 0 / 0.32) calc(var(--backdrop-fade) * 0.42),
-    rgb(0 0 0 / 0.52) calc(var(--backdrop-fade) * 0.58),
-    rgb(0 0 0 / 0.72) calc(var(--backdrop-fade) * 0.74),
-    rgb(0 0 0 / 0.9) calc(var(--backdrop-fade) * 0.9),
-    #000 var(--backdrop-fade)
-  );
-}
-
-.scene-backdrop::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(to bottom, color-mix(in srgb, var(--paper) 16%, transparent) 0%, transparent 20%),
-    linear-gradient(
-      to top,
-      var(--paper) 0%,
-      color-mix(in srgb, var(--paper) 92%, transparent) calc(var(--backdrop-fade) * 0.16),
-      color-mix(in srgb, var(--paper) 78%, transparent) calc(var(--backdrop-fade) * 0.32),
-      color-mix(in srgb, var(--paper) 58%, transparent) calc(var(--backdrop-fade) * 0.5),
-      color-mix(in srgb, var(--paper) 36%, transparent) calc(var(--backdrop-fade) * 0.68),
-      color-mix(in srgb, var(--paper) 16%, transparent) calc(var(--backdrop-fade) * 0.86),
-      transparent var(--backdrop-fade)
-    );
+  background: #fff;
 }
 
 .practice-page > .toolbar,
@@ -1732,7 +1680,6 @@ h3 {
 @media (max-width: 960px) {
   .app-shell.home {
     padding: 28px 24px 32px;
-    border-radius: var(--radius-xl);
   }
 
   .home-settings-grid {
@@ -1796,8 +1743,8 @@ h3 {
   }
 
   .app-shell.home {
+    width: 100%;
     padding: 20px 16px calc(88px + env(safe-area-inset-bottom, 0px));
-    border-radius: 0;
   }
 
   .brand-title {
@@ -1856,7 +1803,7 @@ h3 {
     z-index: 4;
     margin: 0;
     padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
-    background: linear-gradient(transparent, var(--bg-page) 36%);
+    background: linear-gradient(transparent, #fff 36%);
   }
 
   .app-shell.home .start-row {
@@ -1936,11 +1883,6 @@ h3 {
     height: 20px;
   }
 
-  .scene-backdrop {
-    max-height: min(42vh, 360px);
-    --backdrop-fade: 42%;
-  }
-
   .practice-page.stage .app-shell {
     justify-content: flex-start;
     padding-top: 0;
@@ -2002,11 +1944,6 @@ h3 {
 
   .prompt-card {
     padding: 16px 16px 12px;
-  }
-
-  .scene-backdrop {
-    max-height: min(36vh, 220px);
-    --backdrop-fade: 38%;
   }
 
   .paywall {

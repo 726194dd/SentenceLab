@@ -1,6 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { scenarioLabel } from "../data/catalog";
-import { SCENE_ART } from "../data/scenes";
 import { answerSlots, answersOf, checkSlots, emptySlots, sentenceSlots } from "../lib/check";
 import { nextSentence } from "../lib/pool";
 import { loadFavoriteIds, toggleFavorite } from "../lib/favorites";
@@ -204,9 +203,6 @@ export function Practice({
   return (
     <div className={`practice-page ${revealed ? "" : "stage"}`} inert={access.expired || undefined}>
       <ConfettiBurst token={burst} />
-      <div className="scene-backdrop" aria-hidden>
-        <img src={SCENE_ART[sentence.scenario]} alt="" decoding="async" fetchPriority="high" />
-      </div>
       <div className="toolbar">
         <div className="crumbs">
           <div className="crumbs-leading">
