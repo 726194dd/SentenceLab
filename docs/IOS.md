@@ -7,60 +7,102 @@
 - **Mac** + **Xcode 15+**（iOS 应用只能在 macOS 上编译）
 - Apple ID（免费账号即可在真机测试，7 天签名）
 - Node.js 22+
+- **iOS 17.4+**（离线版 Listen 播放 Opus 音频，需系统支持 Opus 解码）
 
-> Windows 上可以生成 `ios/` 工程并同步 Web 资源，但**无法在本机直接运行 Xcode**。需要把项目拷到 Mac，或 Mac 上 `git pull` 后继续。
+> Windows 上可以改代码并 `git push`，但 **iOS 打包必须在 Mac 上** 完成。
 
-## 一键同步 Web 资源到 iOS 工程
+## 两种构建模式
+
+| 模式 | 命令 | 语音 | 适用 |
+|------|------|------|------|
+| **离线版（推荐）** | `npm run ios:build` | 预生成 Kokoro fp32 Opus | 完全离线、音质与 Android 一致 |
+| 开发版 | `npm run cap:sync` | 系统 TTS | 快速调试 UI，无需音频文件 |
+
+## 离线版打包（含 6000 条 Opus 音频）
+
+### 1. 在 Mac 上拉取项目
 
 ```bash
-npm run cap:sync
+git clone https://github.com/726194dd/SentenceLab.git
+cd SentenceLab
+git lfs install   # 若仓库含 LFS 大文件
+git lfs pull      # 可选；离线 iOS 只需 public/audio/
+npm install
 ```
 
-等价于：构建前端 → 复制 `dist/` 到 iOS 工程。
+确认 `public/audio/en/` 和 `public/audio/ja/` 下各有 4000 / 2000 个 `.opus` 文件。若缺失，在开发机上运行 `npm run generate:audio` 后 push 或拷贝到 Mac。
 
-## 在 Mac 上打开并运行
+### 2. 一键同步离线资源到 iOS 工程
+
+```bash
+npm run ios:build
+```
+
+等价于：离线 Vite 构建（含 `public/audio/`，剔除 Kokoro 模型）→ `cap sync ios`。
+
+### 3. 在 Xcode 中运行 / 归档
 
 ```bash
 npm run cap:ios
 ```
 
-或在 Xcode 中打开 `ios/App/App.xcworkspace`（注意是 `.xcworkspace`，不是 `.xcodeproj`）。
+1. 顶部选择 **App** + **iPhone 模拟器**（或已连接的 iPhone）
+2. **Signing & Capabilities** → **Team** 选你的 Apple ID
+3. 点击 **Run (▶)** 或 **Product → Archive** 导出 ipa
 
-1. 顶部选择目标：**App** + **iPhone 模拟器**（或已连接的 iPhone）
-2. 点击 **Run (▶)**
-3. 首次真机运行：Xcode → Signing & Capabilities → Team 选你的 Apple ID
+离线版安装包体积约 **130–150 MB**（主要为 Opus 音频，不含 Kokoro 模型）。
 
-## 更新代码后
-
-每次改完前端代码，重新同步：
+## 开发版（系统 TTS，不含预生成音频）
 
 ```bash
 npm run cap:sync
+npm run cap:ios
 ```
 
-然后在 Xcode 里再点 Run。不必重复 `cap add ios`。
+- 语音使用**系统 TTS**，Listen 响应快，但音质因设备而异
+- 安装包体积小，适合改 UI 时快速迭代
 
-## 说明
+## 更新代码后
 
-- App 内嵌 WKWebView，加载本地 `dist` 静态资源，**不依赖 GitHub Pages**
-- iOS 上语音使用**系统 TTS**（项目里 Kokoro 在 iOS 被禁用），Listen 响应较快
-- 安装包体积远小于「内置 Kokoro 模型」方案
+离线版：
+
+```bash
+npm run ios:build
+# Xcode → Run
+```
+
+开发版：
+
+```bash
+npm run cap:sync
+# Xcode → Run
+```
+
+## 与 Android / Web 对比
+
+| | Android | iOS 离线版 | iOS 开发版 | Web |
+|---|---------|------------|------------|-----|
+| 语音 | 预生成 Opus | 预生成 Opus | 系统 TTS | 运行时 Kokoro fp32 |
+| 离线 | ✅ | ✅ | ✅ | 首次需下载模型 |
+| 构建命令 | `npm run android:build` | `npm run ios:build` | `npm run cap:sync` | — |
 
 ## 常见问题
 
-**Q: CocoaPods 报错？**
+**Listen 没声音（离线版）？**  
+确认已执行 `npm run ios:build`（不是 `cap:sync`），且 `public/audio/{lang}/{id}.opus` 存在。需要 **iOS 17.4+** 才能播放 Opus。
+
+**白屏？**  
+确认 `dist/index.html` 存在，且使用的是 `ios:build` 或 `cap:sync` 之后的内容。
+
+**CocoaPods / SPM 报错？**  
+Capacitor 8 默认使用 SPM。若插件异常，可尝试：
 
 ```bash
 cd ios/App
-pod install
+xcodebuild -resolvePackageDependencies
 cd ../..
 npm run cap:ios
 ```
 
-**Q: 白屏？**
-
-确认已执行 `npm run cap:sync`，且 `dist/index.html` 存在。
-
-**Q: 想在 Windows 上直接装到 iPhone？**
-
-不行，必须经 Mac + Xcode（或云端 Mac CI，如 GitHub Actions macOS runner + 导出 ipa）。
+**TestFlight / App Store？**  
+需要付费 Apple Developer 账号（$99/年）。Archive 后在 Xcode Organizer 上传。

@@ -89,11 +89,11 @@ npm run cap:android
 
 ## 与 iOS / Web 对比
 
-| | Android | iOS | Web |
-|---|---------|-----|-----|
-| 语音 | **预生成 Kokoro fp32 Opus** | 原生 TTS | 运行时 Kokoro fp32 |
-| 离线 | 完全离线（需先生成音频） | 是 | 首次需下载模型 |
-| APK 体积 | 约 120–150MB（仅含 Opus 音频 + 应用，不含 Kokoro 模型） | — | — |
+| | Android | iOS 离线版 | iOS 开发版 | Web |
+|---|---------|------------|------------|-----|
+| 语音 | **预生成 Kokoro fp32 Opus** | **预生成 Kokoro fp32 Opus** | 原生 TTS | 运行时 Kokoro fp32 |
+| 离线 | 完全离线（需先生成音频） | 完全离线（需 `npm run ios:build`） | 是 | 首次需下载模型 |
+| 体积 | 约 120–150MB（Opus + 应用） | 约 130–150MB | 较小 | — |
 
 ## 常见问题
 

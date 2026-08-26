@@ -35,4 +35,4 @@ for (const dir of REMOVE_DIRS) {
 }
 await pruneAssets();
 
-console.log("Android dist prune complete.");
+console.log("Offline dist prune complete.");

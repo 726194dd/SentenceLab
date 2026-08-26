@@ -14,13 +14,16 @@
     "generate:audio:test": "npm run copy:kokoro-assets && npm run download:kokoro-model && tsx scripts/generate-audio.ts --limit 2",
     "convert:audio:opus": "node scripts/convert-wav-to-opus.mjs",
     "build:app": "tsc -b && vite build --base /",
-    "build:app:android": "tsc -b && vite build --mode android --base / && node scripts/prune-android-dist.mjs",
+    "build:app:android": "tsc -b && vite build --mode android --base / && node scripts/prune-offline-dist.mjs",
+    "build:app:ios": "tsc -b && vite build --mode ios --base / && node scripts/prune-offline-dist.mjs",
     "preview": "vite preview",
     "cap:sync": "npm run build:app && npx cap sync",
     "cap:sync:android": "npm run build:app:android && npx cap sync android",
+    "cap:sync:ios": "npm run build:app:ios && npx cap sync ios",
     "cap:ios": "npx cap open ios",
     "cap:android": "npx cap open android",
-    "android:build": "powershell -ExecutionPolicy Bypass -File scripts/build-android.ps1"
+    "android:build": "powershell -ExecutionPolicy Bypass -File scripts/build-android.ps1",
+    "ios:build": "bash scripts/build-ios.sh"
   },
   "dependencies": {
     "@capacitor-community/text-to-speech": "^8.0.2",

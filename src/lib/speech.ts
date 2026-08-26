@@ -44,11 +44,20 @@ function isNativePlatform(): boolean {
   return Capacitor.isNativePlatform();
 }
 
+function isOfflineNativeApp(): boolean {
+  return (
+    import.meta.env.VITE_OFFLINE_ONLY === "true" &&
+    (Capacitor.getPlatform() === "android" || Capacitor.getPlatform() === "ios")
+  );
+}
+
 function usePrerecordedAudio(): boolean {
+  if (isOfflineNativeApp()) return true;
   return Capacitor.getPlatform() === "android";
 }
 
 function useNativeTts(): boolean {
+  if (isOfflineNativeApp()) return false;
   return Capacitor.getPlatform() === "ios";
 }
 

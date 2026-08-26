@@ -23,7 +23,7 @@ function levelChunk(id: string): string | undefined {
 
 export default defineConfig(({ mode }) => {
   const offlineOnly =
-    mode === "android" || process.env.VITE_OFFLINE_ONLY === "true";
+    mode === "android" || mode === "ios" || process.env.VITE_OFFLINE_ONLY === "true";
 
   return {
     base: process.env.BASE_PATH || "/",
