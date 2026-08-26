@@ -13,6 +13,7 @@
     "generate:audio:ja-rest": "npm run copy:kokoro-assets && npm run download:kokoro-model && tsx scripts/generate-audio-ja.ts --ja-levels N3,N2,N1",
     "generate:audio:test": "npm run copy:kokoro-assets && npm run download:kokoro-model && tsx scripts/generate-audio.ts --limit 2",
     "convert:audio:opus": "node scripts/convert-wav-to-opus.mjs",
+    "generate:icons": "node scripts/generate-app-icons.mjs",
     "build:app": "tsc -b && vite build --base /",
     "build:app:android": "tsc -b && vite build --mode android --base / && node scripts/prune-offline-dist.mjs",
     "build:app:ios": "tsc -b && vite build --mode ios --base / && node scripts/prune-offline-dist.mjs",

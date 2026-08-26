@@ -22,6 +22,12 @@ try {
   # App 必须用根路径 /，不能用 GitHub Pages 的 /sentence-lab/
   $env:BASE_PATH = "/"
 
+  Write-Host ">> 生成应用图标与启动图..."
+  npm run generate:icons
+  if ($LASTEXITCODE -ne 0) {
+    throw "generate:icons failed"
+  }
+
   Write-Host ">> 同步 Web 资源到 Android（离线版，不含 Kokoro 模型）..."
   npm run cap:sync:android
   if ($LASTEXITCODE -ne 0) {

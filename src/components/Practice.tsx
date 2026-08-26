@@ -8,6 +8,7 @@ import { playCheckFx, playNextFx, unlockFx } from "../lib/fx";
 import { localHint, lookupHint, withRoles, type WordHint } from "../lib/wordHint";
 import { speakTarget, stopSpeech, warmupKokoroSpeech } from "../lib/speech";
 import { useListen } from "../lib/useSpeech";
+import { useSwipeBack } from "../lib/useSwipeBack";
 import type { LanguageId, Sentence, SlotCheck } from "../types";
 import { DrillList } from "./DrillList";
 import { IconArrowLeft, IconCheck, IconEye, IconRefresh, IconStar, ListenIcon } from "./Icons";
@@ -105,6 +106,7 @@ export function Practice({
   const toolbarRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
   const listen = useListen(sentence.en, language, sentence.id);
+  useSwipeBack(pageRef, onBack);
   const doneCount = Math.min(doneIds.size, pool.length);
   const questionNo = Math.min(pool.length, doneIds.has(sentence.id) ? doneCount : doneCount + 1);
   const attempted = stats.correct + stats.wrong;
