@@ -27,13 +27,16 @@
     "ios:build": "bash scripts/build-ios.sh"
   },
   "dependencies": {
+    "@capacitor-community/media": "^9.1.0",
     "@capacitor-community/text-to-speech": "^8.0.2",
     "@capacitor/android": "^8.5.0",
     "@capacitor/app": "^8.1.1",
     "@capacitor/cli": "^8.5.0",
     "@capacitor/core": "^8.5.0",
+    "@capacitor/filesystem": "^8.1.3",
     "@capacitor/ios": "^8.5.0",
     "@capacitor/keyboard": "^8.0.5",
+    "@capacitor/share": "^8.0.1",
     "@capacitor/splash-screen": "^8.0.2",
     "kokoro-js": "^1.2.1",
     "kokoro-js-jp": "^0.2.0",

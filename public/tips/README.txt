@@ -1,4 +1,4 @@
 WeChat tip QR code:
-- wechat.png  (shared for ¥4 / ¥6 / ¥8 / ¥10)
+- wechat.png  (default, shown on the tip card)
 
-Optional: set VITE_TIP_URL_* in .env for direct WeChat Pay H5 links.
+Optional: set VITE_TIP_QR in .env to use a custom image path.
