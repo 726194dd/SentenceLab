@@ -23,6 +23,9 @@ let nextQueued = false;
 let rightSource: AudioBufferSourceNode | null = null;
 let lastTypeAt = 0;
 let lastClickFxAt = 0;
+let audioUnlocked = false;
+let typeHtmlEl: HTMLAudioElement | null = null;
+const unlockHtmlEls: Partial<Record<Sfx, HTMLAudioElement>> = {};
 
 type UiChirpOptions = {
   start: number;
@@ -192,12 +195,23 @@ export function unlockFx(): void {
   void resumeAudio().then((audio) => {
     if (audio) void decodeAll(audio);
   });
+
+  // iOS requires a user-gesture unlock, but creating new Audio() on every call
+  // (e.g. each keystroke) accumulates media elements and freezes the WebView.
+  if (audioUnlocked) return;
+  audioUnlocked = true;
+
   (Object.keys(urls) as Sfx[]).forEach((name) => {
-    const el = new Audio(urls[name]);
-    el.preload = "auto";
-    el.setAttribute("playsinline", "true");
+    let el = unlockHtmlEls[name];
+    if (!el) {
+      el = new Audio(urls[name]);
+      el.preload = "auto";
+      el.setAttribute("playsinline", "true");
+      unlockHtmlEls[name] = el;
+    }
     el.muted = true;
-    void el.play()
+    void el
+      .play()
       .then(() => {
         el.pause();
         try {
@@ -338,7 +352,7 @@ export function armButtonClickFx(): void {
 
 function playTypeOscillator(audio: AudioContext, volume: number): void {
   const now = performance.now();
-  if (now - lastTypeAt < 24) return;
+  if (now - lastTypeAt < 28) return;
   lastTypeAt = now;
 
   const t = audio.currentTime;
@@ -353,8 +367,37 @@ function playTypeOscillator(audio: AudioContext, volume: number): void {
   osc.frequency.setValueAtTime(920 + Math.random() * 180, t);
   osc.frequency.exponentialRampToValueAtTime(520, t + 0.028);
   osc.connect(gain);
+  osc.onended = () => {
+    try {
+      osc.disconnect();
+      gain.disconnect();
+    } catch {
+      // already disconnected
+    }
+  };
   osc.start(t);
   osc.stop(t + 0.042);
+}
+
+function playTypeHtmlFallback(volume: number): void {
+  const now = performance.now();
+  if (now - lastTypeAt < 28) return;
+  lastTypeAt = now;
+
+  if (!typeHtmlEl) {
+    typeHtmlEl = new Audio(nextUrl);
+    typeHtmlEl.preload = "auto";
+    typeHtmlEl.setAttribute("playsinline", "true");
+  }
+  const el = typeHtmlEl;
+  el.volume = Math.min(1, 0.14 * volume);
+  el.playbackRate = 2.6;
+  try {
+    el.currentTime = 0;
+  } catch {
+    // ignore
+  }
+  void el.play().catch(() => undefined);
 }
 
 export function playTypeFx(): void {
@@ -371,14 +414,9 @@ export function playTypeFx(): void {
     }
   }
 
+  // Kick AudioContext in the background; reuse one element instead of spawning.
+  void resumeAudio();
   if (prefersHtmlSfx()) {
-    const el = new Audio(nextUrl);
-    el.preload = "auto";
-    el.setAttribute("playsinline", "true");
-    el.volume = 0.14 * volume;
-    el.playbackRate = 2.6;
-    void el.play().catch(() => undefined);
-    void resumeAudio();
-    return;
+    playTypeHtmlFallback(volume);
   }
 }

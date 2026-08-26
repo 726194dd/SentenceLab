@@ -106,7 +106,7 @@ body:has(.app-shell.home) {
 
 body {
   margin: 0;
-  overflow-x: hidden;
+  overflow-x: clip;
   background:
     radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--blue) 8%, transparent), transparent 36%),
     radial-gradient(circle at 88% 12%, color-mix(in srgb, var(--blue-soft) 12%, transparent), transparent 32%),
@@ -149,9 +149,9 @@ h3 {
 
 .app-shell.home {
   width: min(1100px, 100%);
-  padding: 40px 48px 48px;
-  padding-left: max(48px, env(safe-area-inset-left, 0px));
-  padding-right: max(48px, env(safe-area-inset-right, 0px));
+  /* Top inset follows notch / Dynamic Island / status bar per device */
+  padding: calc(40px + env(safe-area-inset-top, 0px)) max(48px, env(safe-area-inset-right, 0px))
+    calc(48px + env(safe-area-inset-bottom, 0px)) max(48px, env(safe-area-inset-left, 0px));
   text-align: left;
   background: transparent;
   border: 0;
@@ -937,12 +937,16 @@ h3 {
 .practice-page {
   position: relative;
   width: 100%;
-  min-height: 100vh;
-  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: center;
+  overflow: hidden;
   background: #fff;
+  padding-top: var(--practice-toolbar-h, 0px);
 }
 
 .practice-page > .toolbar,
@@ -952,14 +956,38 @@ h3 {
 }
 
 .practice-page > .toolbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
   align-self: stretch;
+  flex: 0 0 auto;
+  background: #fff;
+  transform: none;
 }
 
 .practice-page > .app-shell {
-  width: fit-content;
+  flex: 1 1 auto;
+  align-self: center;
+  width: min(640px, calc(100vw - 48px));
   min-width: min(640px, calc(100vw - 48px));
   max-width: calc(100vw - 48px);
+  min-height: 0;
   margin-inline: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px));
+}
+
+.practice-page > .app-shell::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 .practice-page .btn-ghost {
@@ -967,7 +995,6 @@ h3 {
 }
 
 .practice-page.stage .app-shell {
-  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -977,7 +1004,9 @@ h3 {
 
 .toolbar {
   width: 100%;
-  padding: max(16px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-right, 0px)) 0 max(24px, env(safe-area-inset-left, 0px));
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-right, 0px)) 12px
+    max(24px, env(safe-area-inset-left, 0px));
+  background: #fff;
 }
 
 .crumbs {
@@ -1748,7 +1777,8 @@ h3 {
 
 @media (max-width: 960px) {
   .app-shell.home {
-    padding: 28px 24px 32px;
+    padding: calc(28px + env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-right, 0px))
+      calc(32px + env(safe-area-inset-bottom, 0px)) max(24px, env(safe-area-inset-left, 0px));
   }
 
   .home-settings-grid {
@@ -1813,7 +1843,8 @@ h3 {
 
   .app-shell.home {
     width: 100%;
-    padding: 20px 16px calc(88px + env(safe-area-inset-bottom, 0px));
+    padding: calc(20px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px))
+      calc(88px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
   }
 
   .brand-title {
@@ -1887,7 +1918,7 @@ h3 {
   }
 
   .toolbar {
-    padding: max(12px, env(safe-area-inset-top, 0px)) 12px 0;
+    padding: max(12px, env(safe-area-inset-top, 0px)) 12px 10px;
   }
 
   .crumbs {

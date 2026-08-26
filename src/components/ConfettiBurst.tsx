@@ -21,7 +21,13 @@ interface Piece {
 function spawn(width: number, height: number): Piece[] {
   const cx = width / 2;
   const cy = height * 0.42;
-  const count = Math.round(Math.min(120, 70 + Math.min(width, height) / 12));
+  // Fewer particles on phones — full 100+ bursts hitch WKWebView mid-frame.
+  const mobile = Math.min(width, height) < 700;
+  const count = Math.round(
+    mobile
+      ? Math.min(48, 28 + Math.min(width, height) / 28)
+      : Math.min(120, 70 + Math.min(width, height) / 12),
+  );
   const kinds: Kind[] = ["rect", "circle", "triangle", "ribbon"];
   return Array.from({ length: count }, () => {
     const angle = Math.random() * Math.PI * 2;

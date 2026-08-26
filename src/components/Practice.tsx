@@ -102,6 +102,8 @@ export function Practice({
   const [burst, setBurst] = useState(0);
   const [stats, setStats] = useState(() => loadCheckStats(language, storeLevel, storeScenario));
   const holdEnter = useRef(false);
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const pageRef = useRef<HTMLDivElement>(null);
   const listen = useListen(sentence.en, language, sentence.id);
   const doneCount = Math.min(doneIds.size, pool.length);
   const questionNo = Math.min(pool.length, doneIds.has(sentence.id) ? doneCount : doneCount + 1);
@@ -113,6 +115,24 @@ export function Practice({
 
   useEffect(() => {
     warmupKokoroSpeech();
+  }, []);
+
+  // Measure toolbar once for layout spacer; do not chase visualViewport (causes jitter).
+  useLayoutEffect(() => {
+    const toolbar = toolbarRef.current;
+    const page = pageRef.current;
+    if (!toolbar || !page) return;
+
+    const syncHeight = () => {
+      page.style.setProperty("--practice-toolbar-h", `${toolbar.offsetHeight}px`);
+    };
+    syncHeight();
+    const observer = new ResizeObserver(syncHeight);
+    observer.observe(toolbar);
+    return () => {
+      observer.disconnect();
+      page.style.removeProperty("--practice-toolbar-h");
+    };
   }, []);
 
   useEffect(() => {
@@ -196,9 +216,9 @@ export function Practice({
   };
 
   return (
-    <div className={`practice-page ${revealed ? "" : "stage"}`}>
+    <div ref={pageRef} className={`practice-page ${revealed ? "" : "stage"}`}>
       <ConfettiBurst token={burst} />
-      <div className="toolbar">
+      <div ref={toolbarRef} className="toolbar">
         <div className="crumbs">
           <div className="crumbs-leading">
             <button
