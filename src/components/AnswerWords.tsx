@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { LanguageId, VocabItem } from "../types";
 import { speakTarget } from "../lib/speech";
-import { lookupWord, splitAnswer, translateWord, type WordEntry } from "../lib/wordLookup";
+import { buildLocalEntry, isOfflineWordLookup, lookupWord, splitAnswer, translateWord, type WordEntry } from "../lib/wordLookup";
 import { useListen } from "../lib/useSpeech";
 import { ListenIcon } from "./Icons";
 
@@ -102,11 +102,16 @@ export function AnswerWords({ text, vocab, lang = "en", slots, compact = false }
   useEffect(() => {
     if (!picked) return;
     let alive = true;
-    void lookupWord(picked, vocabRef.current, lang).then((next) => {
-      if (!alive) return;
-      setEntry(next);
-      void speakTarget(next.speak, lang);
-    });
+    const local = buildLocalEntry(picked, vocabRef.current, lang);
+    setEntry(local);
+    void speakTarget(local.speak, lang);
+
+    if (!isOfflineWordLookup() && lang === "en") {
+      void lookupWord(picked, vocabRef.current, lang).then((next) => {
+        if (alive) setEntry(next);
+      });
+    }
+
     return () => {
       alive = false;
     };

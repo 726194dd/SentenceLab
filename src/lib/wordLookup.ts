@@ -1,5 +1,10 @@
+import { Capacitor } from "@capacitor/core";
 import type { LanguageId, VocabItem } from "../types";
 import { tokenize } from "./check";
+
+export function isOfflineWordLookup(): boolean {
+  return import.meta.env.VITE_OFFLINE_ONLY === "true" || Capacitor.isNativePlatform();
+}
 
 export interface WordSense {
   pos: string;
@@ -244,7 +249,42 @@ async function fetchZh(query: string): Promise<string> {
   }
 }
 
+export function buildLocalEntry(
+  token: string,
+  vocab: VocabItem[],
+  lang: LanguageId = "en",
+): WordEntry {
+  if (lang === "ja") {
+    const vocabItem = matchJaVocab(token, vocab) ?? matchVocab(token.trim(), vocab);
+    return {
+      word: token,
+      speak: token,
+      zh: vocabItem?.meaning ?? "",
+      senses: vocabItem ? [{ pos: "", meaning: vocabItem.meaning }] : [],
+    };
+  }
+
+  const clean = token.replace(/[^A-Za-z']/g, "");
+  const vocabItem = matchVocab(clean, vocab);
+  const zh = vocabItem?.meaning ?? localZh(clean);
+  return {
+    word: clean,
+    speak: clean,
+    zh,
+    phrase: vocabItem && tokenize(vocabItem.word).length > 1 ? vocabItem.word : undefined,
+    senses: zh ? [{ pos: "", meaning: zh }] : [],
+  };
+}
+
 export async function translateWord(token: string): Promise<string> {
+  if (isOfflineWordLookup()) {
+    const query = cleanQuery(token);
+    if (!query) return "";
+    const parts = query.split(" ");
+    if (parts.length === 1) return localZh(parts[0]) ?? "";
+    return parts.map((part) => localZh(part) ?? part).join(" ");
+  }
+
   const query = cleanQuery(token);
   if (!query) return "";
   const parts = query.split(" ");
@@ -263,41 +303,30 @@ export async function lookupWord(
   vocab: VocabItem[],
   lang: LanguageId = "en",
 ): Promise<WordEntry> {
-  if (lang === "ja") {
-    const vocabItem = matchVocab(token, vocab) ?? matchVocab(token.trim(), vocab);
-    return {
-      word: token,
-      speak: token,
-      zh: vocabItem?.meaning ?? "",
-      senses: vocabItem ? [{ pos: "", meaning: vocabItem.meaning }] : [],
-    };
+  const entry = buildLocalEntry(token, vocab, lang);
+  const cacheKey =
+    lang === "ja"
+      ? `${lang}:${token}|${vocab.map((item) => item.word).join(",")}`
+      : `${entry.word.toLowerCase()}|${vocab.map((item) => item.word).join(",")}`;
+
+  if (lang === "ja" || isOfflineWordLookup()) {
+    cache.set(cacheKey, entry);
+    return entry;
   }
 
-  const clean = token.replace(/[^A-Za-z']/g, "");
-  const key = `${clean.toLowerCase()}|${vocab.map((item) => item.word).join(",")}`;
-  const hit = cache.get(key);
-  if (hit?.senses.length) return { ...hit, speak: clean };
-
-  const vocabItem = matchVocab(clean, vocab);
-  const speak = clean;
-  const entry: WordEntry = {
-    word: clean,
-    speak,
-    zh: vocabItem?.meaning ?? localZh(clean),
-    phrase: vocabItem && tokenize(vocabItem.word).length > 1 ? vocabItem.word : undefined,
-    senses: [],
-  };
+  const cached = cache.get(cacheKey);
+  if (cached?.senses.length) return { ...cached, speak: entry.speak };
 
   try {
-    const dict = await fetchDictionary(stems(clean)[0] || clean);
+    const dict = await fetchDictionary(stems(entry.word)[0] || entry.word);
     if (dict) {
       entry.phonetic = dict.phonetic;
       entry.senses = dict.senses;
     }
   } catch {
-    // Offline: keep the local gloss and still allow speech.
+    // Keep local gloss when the dictionary API is unavailable.
   }
 
-  cache.set(key, entry);
+  cache.set(cacheKey, entry);
   return entry;
 }

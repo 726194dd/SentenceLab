@@ -53,7 +53,9 @@ function isOfflineNativeApp(): boolean {
 
 function usePrerecordedAudio(): boolean {
   if (isOfflineNativeApp()) return true;
-  return Capacitor.getPlatform() === "android";
+  if (Capacitor.getPlatform() === "android") return true;
+  // Web uses the same fp32 Opus files as mobile for sentence Listen.
+  return Capacitor.getPlatform() === "web";
 }
 
 function useNativeTts(): boolean {
@@ -115,6 +117,8 @@ async function configureKokoroRuntime(): Promise<void> {
     import("kokoro-js"),
   ]);
   kokoroEnv.wasmPaths = `${import.meta.env.BASE_URL}assets/`;
+  transformersEnv.allowLocalModels = true;
+  transformersEnv.localModelPath = `${import.meta.env.BASE_URL}models`;
   const wasm = transformersEnv.backends.onnx.wasm;
   if (wasm) wasm.numThreads = 1;
 }
@@ -130,18 +134,6 @@ async function loadEngine(): Promise<KokoroJP> {
         device: "wasm" as const,
         japanese: { assetsUrl: kokoroAssetsUrl() },
       };
-
-      if (typeof navigator !== "undefined" && "gpu" in navigator) {
-        try {
-          return await withTimeout(
-            KokoroJP.load({ ...base, device: "webgpu" }),
-            12_000,
-            "kokoro webgpu timeout",
-          );
-        } catch {
-          // Fall back to WASM on desktop.
-        }
-      }
 
       return KokoroJP.load(base);
     })().catch((error) => {
@@ -272,126 +264,6 @@ async function playPrerecorded(
   }
 }
 
-const FEMALE_VOICE =
-  /female|woman|samantha|karen|moira|tessa|fiona|victoria|kate|serena|nicky|allison|susan|zira|hazel|aria|jenny|salli|ivy|joanna|kendra|kimberly|emma|amy|ava|linda|siri|google us english$|google uk english female/i;
-const MALE_VOICE =
-  /male|\bman\b|\bguy\b|david|mark|alex|daniel|fred|tom|james|brian|matthew|justin|kevin|rishi|oliver|arthur|aaron|albert|gordon|lee|google uk english male/i;
-
-function voiceLabel(voice: SpeechSynthesisVoice): string {
-  return `${voice.name} ${voice.voiceURI}`;
-}
-
-function isMaleVoice(voice: SpeechSynthesisVoice): boolean {
-  const label = voiceLabel(voice);
-  return MALE_VOICE.test(label) && !FEMALE_VOICE.test(label);
-}
-
-function pickNaturalVoice(): SpeechSynthesisVoice | undefined {
-  const voices = window.speechSynthesis.getVoices().filter((voice) => /^en\b/i.test(voice.lang));
-  if (voices.length === 0) return undefined;
-
-  const score = (voice: SpeechSynthesisVoice) => {
-    const label = voiceLabel(voice);
-    let rank = 8;
-    if (FEMALE_VOICE.test(label)) rank -= 6;
-    if (MALE_VOICE.test(label)) rank += 8;
-    if (/neural|natural|enhanced|premium|online|siri/i.test(label)) rank -= 2;
-    if (/en-US/i.test(voice.lang)) rank -= 1;
-    return rank;
-  };
-
-  return [...voices].sort((a, b) => score(a) - score(b))[0];
-}
-
-function speakWithBrowser(text: string, token: number): Promise<void> {
-  stopBrowserSpeech();
-  if (typeof window === "undefined" || !window.speechSynthesis) {
-    return Promise.resolve();
-  }
-
-  return new Promise((resolve) => {
-    const speak = () => {
-      if (token !== playToken) {
-        resolve();
-        return;
-      }
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "en-US";
-      utterance.rate = 0.88;
-      const voice = pickNaturalVoice();
-      if (voice) utterance.voice = voice;
-      utterance.pitch = voice && isMaleVoice(voice) ? 1.18 : 1;
-      utterance.onend = () => {
-        if (token === playToken) setStatus("idle");
-        resolve();
-      };
-      utterance.onerror = () => {
-        if (token === playToken) setStatus("idle");
-        resolve();
-      };
-      setStatus("speaking");
-      window.speechSynthesis.speak(utterance);
-    };
-
-    if (window.speechSynthesis.getVoices().length === 0) {
-      window.speechSynthesis.addEventListener("voiceschanged", speak, { once: true });
-      window.setTimeout(speak, 250);
-      return;
-    }
-    speak();
-  });
-}
-
-function pickJapaneseVoice(): SpeechSynthesisVoice | undefined {
-  const voices = window.speechSynthesis.getVoices().filter((voice) => /^ja/i.test(voice.lang));
-  if (voices.length === 0) return undefined;
-  const score = (voice: SpeechSynthesisVoice) => {
-    let rank = 8;
-    if (/ja-JP/i.test(voice.lang)) rank -= 4;
-    if (/neural|premium|enhanced|kyoko|otoya|nanami/i.test(voiceLabel(voice))) rank -= 2;
-    return rank;
-  };
-  return [...voices].sort((a, b) => score(a) - score(b))[0];
-}
-
-function speakWithBrowserJa(text: string, token: number): Promise<void> {
-  stopBrowserSpeech();
-  if (typeof window === "undefined" || !window.speechSynthesis) {
-    return Promise.resolve();
-  }
-
-  return new Promise((resolve) => {
-    const speak = () => {
-      if (token !== playToken) {
-        resolve();
-        return;
-      }
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "ja-JP";
-      utterance.rate = 0.92;
-      const voice = pickJapaneseVoice();
-      if (voice) utterance.voice = voice;
-      utterance.onend = () => {
-        if (token === playToken) setStatus("idle");
-        resolve();
-      };
-      utterance.onerror = () => {
-        if (token === playToken) setStatus("idle");
-        resolve();
-      };
-      setStatus("speaking");
-      window.speechSynthesis.speak(utterance);
-    };
-
-    if (window.speechSynthesis.getVoices().length === 0) {
-      window.speechSynthesis.addEventListener("voiceschanged", speak, { once: true });
-      window.setTimeout(speak, 250);
-      return;
-    }
-    speak();
-  });
-}
-
 async function synthesizeWithKokoro(
   text: string,
   voice: string,
@@ -433,14 +305,14 @@ export async function speakJapanese(text: string, audioId?: string): Promise<voi
   stopNativeSpeech();
   stopBrowserSpeech();
 
-  if (useNativeTts()) {
-    await speakWithNative(text, "ja", token);
-    return;
-  }
-
   if (usePrerecordedAudio() && audioId) {
     const played = await playPrerecorded("ja", audioId, token);
     if (played) return;
+    if (!canUseKokoro()) {
+      await speakWithNative(text, "ja", token);
+      return;
+    }
+  } else if (useNativeTts()) {
     await speakWithNative(text, "ja", token);
     return;
   }
@@ -452,9 +324,10 @@ export async function speakJapanese(text: string, audioId?: string): Promise<voi
 
   try {
     await synthesizeWithKokoro(text, JA_VOICE, "ja", token);
-  } catch {
+  } catch (error) {
+    console.error("Kokoro Japanese speech failed:", error);
     if (token !== playToken) return;
-    await speakWithBrowserJa(text, token);
+    setStatus("idle");
   }
 }
 
@@ -480,14 +353,14 @@ export async function speakEnglish(text: string, audioId?: string): Promise<void
   stopNativeSpeech();
   stopBrowserSpeech();
 
-  if (useNativeTts()) {
-    await speakWithNative(text, "en", token);
-    return;
-  }
-
   if (usePrerecordedAudio() && audioId) {
     const played = await playPrerecorded("en", audioId, token);
     if (played) return;
+    if (!canUseKokoro()) {
+      await speakWithNative(text, "en", token);
+      return;
+    }
+  } else if (useNativeTts()) {
     await speakWithNative(text, "en", token);
     return;
   }
@@ -500,8 +373,9 @@ export async function speakEnglish(text: string, audioId?: string): Promise<void
   setStatus("loading");
   try {
     await synthesizeWithKokoro(text, EN_VOICE, "en", token);
-  } catch {
+  } catch (error) {
+    console.error("Kokoro English speech failed:", error);
     if (token !== playToken) return;
-    await speakWithBrowser(text, token);
+    setStatus("idle");
   }
 }

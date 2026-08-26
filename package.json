@@ -4,8 +4,8 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "dev": "npm run copy:kokoro-assets && vite",
+    "build": "npm run copy:kokoro-assets && tsc -b && vite build",
     "copy:kokoro-assets": "kokoro-js-jp-copy-assets public/kokoro-js-jp",
     "download:kokoro-model": "node scripts/download-kokoro-model.mjs",
     "generate:audio": "npm run copy:kokoro-assets && npm run download:kokoro-model && tsx scripts/generate-audio.ts",

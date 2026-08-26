@@ -1,5 +1,5 @@
 import type { LanguageId, VocabItem } from "../types";
-import { localZh, lookupWord, matchJaVocab, matchVocab } from "./wordLookup";
+import { localZh, lookupWord, matchJaVocab, matchVocab, isOfflineWordLookup } from "./wordLookup";
 
 export interface WordHint {
   pos: string;
@@ -422,7 +422,7 @@ export async function lookupHint(
   lang: LanguageId = "en",
 ): Promise<WordHint> {
   const seed = localHint(word, vocab, lang);
-  if (lang === "ja") return seed;
+  if (lang === "ja" || isOfflineWordLookup()) return seed;
   const entry = await lookupWord(word, vocab);
   return {
     pos: seed.pos || entry.senses[0]?.pos || "名词",
