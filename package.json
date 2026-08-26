@@ -6,18 +6,42 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "copy:kokoro-assets": "kokoro-js-jp-copy-assets public/kokoro-js-jp",
+    "download:kokoro-model": "node scripts/download-kokoro-model.mjs",
+    "generate:audio": "npm run copy:kokoro-assets && npm run download:kokoro-model && tsx scripts/generate-audio.ts",
+    "generate:audio:ja-n5n4": "npm run copy:kokoro-assets && npm run download:kokoro-model && tsx scripts/generate-audio.ts --lang ja --ja-levels N5,N4",
+    "generate:audio:ja-rest": "npm run copy:kokoro-assets && npm run download:kokoro-model && tsx scripts/generate-audio-ja.ts --ja-levels N3,N2,N1",
+    "generate:audio:test": "npm run copy:kokoro-assets && npm run download:kokoro-model && tsx scripts/generate-audio.ts --limit 2",
+    "convert:audio:opus": "node scripts/convert-wav-to-opus.mjs",
+    "build:app": "tsc -b && vite build --base /",
+    "build:app:android": "tsc -b && vite build --mode android --base / && node scripts/prune-android-dist.mjs",
+    "preview": "vite preview",
+    "cap:sync": "npm run build:app && npx cap sync",
+    "cap:sync:android": "npm run build:app:android && npx cap sync android",
+    "cap:ios": "npx cap open ios",
+    "cap:android": "npx cap open android",
+    "android:build": "powershell -ExecutionPolicy Bypass -File scripts/build-android.ps1"
   },
   "dependencies": {
+    "@capacitor-community/text-to-speech": "^8.0.2",
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/cli": "^8.5.0",
+    "@capacitor/core": "^8.5.0",
+    "@capacitor/ios": "^8.5.0",
+    "@capacitor/splash-screen": "^8.0.2",
     "kokoro-js": "^1.2.1",
     "kokoro-js-jp": "^0.2.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
     "@vitejs/plugin-react": "^4.7.0",
+    "playwright": "^1.61.1",
+    "tsx": "^4.20.5",
     "typescript": "^5.9.2",
     "vite": "^6.3.5"
   }

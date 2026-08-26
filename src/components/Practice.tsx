@@ -6,7 +6,7 @@ import { loadFavoriteIds, toggleFavorite } from "../lib/favorites";
 import { loadCheckStats, loadDoneIds, saveCheckStats, saveDoneIds } from "../lib/progress";
 import { playCheckFx, playNextFx, unlockFx } from "../lib/fx";
 import { localHint, lookupHint, withRoles, type WordHint } from "../lib/wordHint";
-import { speakTarget, stopSpeech, warmupJapaneseSpeech } from "../lib/speech";
+import { speakTarget, stopSpeech, warmupKokoroSpeech } from "../lib/speech";
 import { useListen } from "../lib/useSpeech";
 import type { LanguageId, Sentence, SlotCheck } from "../types";
 import { DrillList } from "./DrillList";
@@ -102,7 +102,7 @@ export function Practice({
   const [burst, setBurst] = useState(0);
   const [stats, setStats] = useState(() => loadCheckStats(language, storeLevel, storeScenario));
   const holdEnter = useRef(false);
-  const listen = useListen(sentence.en, language);
+  const listen = useListen(sentence.en, language, sentence.id);
   const doneCount = Math.min(doneIds.size, pool.length);
   const questionNo = Math.min(pool.length, doneIds.has(sentence.id) ? doneCount : doneCount + 1);
   const attempted = stats.correct + stats.wrong;
@@ -112,12 +112,12 @@ export function Practice({
   const marks = result?.marks ?? values.map(() => "idle" as const);
 
   useEffect(() => {
-    if (language === "ja") warmupJapaneseSpeech();
-  }, [language]);
+    warmupKokoroSpeech();
+  }, []);
 
   useEffect(() => {
     if (!listenFirst) return;
-    speakTarget(sentence.en, language);
+    speakTarget(sentence.en, language, sentence.id);
     return () => stopSpeech();
   }, [language, listenFirst, sentence.id, sentence.en]);
 

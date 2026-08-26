@@ -3,3 +3,21 @@ dist
 .DS_Store
 *.local
 .vite
+
+# Kokoro assets copied from node_modules at build time
+public/kokoro-js-jp
+public/models
+public/audio
+
+# Capacitor / iOS
+ios/App/public
+ios/App/Pods
+ios/DerivedData
+
+# Capacitor / Android
+android/.gradle
+android/app/build
+android/build
+android/local.properties
+*.apk
+*.aab

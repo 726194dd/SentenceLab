@@ -28,7 +28,7 @@ export function speechButtonLabel(status: SpeechStatus): string {
   return "Listen";
 }
 
-export function useListen(phrase: string, lang: LanguageId = "en") {
+export function useListen(phrase: string, lang: LanguageId = "en", audioId?: string) {
   const { status, text } = useSpeech();
   const active = text === phrase;
 
@@ -41,7 +41,7 @@ export function useListen(phrase: string, lang: LanguageId = "en") {
         stopSpeech();
         return;
       }
-      void speakTarget(phrase, lang);
+      void speakTarget(phrase, lang, audioId);
     },
   };
 }
