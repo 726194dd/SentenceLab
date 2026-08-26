@@ -8,7 +8,6 @@ scripts/*.log
 # Kokoro assets copied from node_modules at build time
 public/kokoro-js-jp
 public/models
-public/audio
 
 # Capacitor / iOS
 ios/App/public
