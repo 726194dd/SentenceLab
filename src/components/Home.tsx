@@ -56,22 +56,54 @@ export function Home({
   const [settings, setSettings] = useState<AppSettings>(() => loadSettings());
   const settingsRef = useRef<HTMLElement>(null);
   const settingsBtnRef = useRef<HTMLButtonElement>(null);
+  const dismissGuardRef = useRef(false);
+  const dismissTimerRef = useRef<number | null>(null);
   const canStart = useFavorites ? favoriteCount > 0 : poolCount > 0;
   const levelItems = levelsFor(language);
 
   useEffect(() => subscribeSettings(setSettings), []);
 
+  const armDismissGuard = () => {
+    dismissGuardRef.current = true;
+    if (dismissTimerRef.current != null) {
+      window.clearTimeout(dismissTimerRef.current);
+    }
+    dismissTimerRef.current = window.setTimeout(() => {
+      dismissGuardRef.current = false;
+      dismissTimerRef.current = null;
+    }, 400);
+  };
+
   useEffect(() => {
     if (!settingsOpen) return;
-    const closeOnOutside = (event: PointerEvent) => {
+    const closeOnOutside = (event: Event) => {
       const target = event.target as Node;
       if (settingsRef.current?.contains(target)) return;
       if (settingsBtnRef.current?.contains(target)) return;
+      if (event.cancelable) event.preventDefault();
+      event.stopPropagation();
+      armDismissGuard();
       setSettingsOpen(false);
     };
-    document.addEventListener("pointerdown", closeOnOutside);
-    return () => document.removeEventListener("pointerdown", closeOnOutside);
+    const types: Array<keyof DocumentEventMap> = ["pointerdown", "touchstart", "mousedown", "click"];
+    types.forEach((type) => document.addEventListener(type, closeOnOutside, true));
+    return () => {
+      types.forEach((type) => document.removeEventListener(type, closeOnOutside, true));
+    };
   }, [settingsOpen]);
+
+  const selectScenario = (next: Scenario) => {
+    if (dismissGuardRef.current) return;
+    setUseFavorites(false);
+    onFavoritesMode?.(false);
+    onScenario(next);
+  };
+
+  const selectFavorites = () => {
+    if (dismissGuardRef.current) return;
+    setUseFavorites(true);
+    onFavoritesMode?.(true);
+  };
 
   return (
     <div className="app-shell home">
@@ -173,11 +205,7 @@ export function Home({
                 type="button"
                 className={`scene-card ${active ? "active" : ""}`}
                 style={sceneCardStyle(percent)}
-                onClick={() => {
-                  setUseFavorites(false);
-                  onFavoritesMode?.(false);
-                  onScenario(item.id);
-                }}
+                onClick={() => selectScenario(item.id)}
               >
                 <div className="scene-card-head">
                   <strong className="scene-card-name">{item.title}</strong>
@@ -192,10 +220,7 @@ export function Home({
             type="button"
             className={`scene-card favorite-card ${useFavorites ? "active" : ""}`}
             disabled={favoriteCount === 0}
-            onClick={() => {
-              setUseFavorites(true);
-              onFavoritesMode?.(true);
-            }}
+            onClick={selectFavorites}
           >
             <div className="scene-card-head">
               <strong className="scene-card-name">收藏练习</strong>
