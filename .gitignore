@@ -5,10 +5,6 @@ scripts/*.log
 *.local
 .vite
 
-# Kokoro assets copied from node_modules at build time
-public/kokoro-js-jp
-public/models
-
 # Capacitor / iOS
 ios/App/public
 ios/App/Pods
