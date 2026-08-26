@@ -5,6 +5,7 @@ import { nextSentence } from "../lib/pool";
 import { loadFavoriteIds, toggleFavorite } from "../lib/favorites";
 import { loadCheckStats, loadDoneIds, saveCheckStats, saveDoneIds } from "../lib/progress";
 import { playCheckFx, playNextFx, unlockFx } from "../lib/fx";
+import { isOfflineWordLookup } from "../lib/wordLookup";
 import { localHint, lookupHint, withRoles, type WordHint } from "../lib/wordHint";
 import { speakTarget, stopSpeech, warmupKokoroSpeech } from "../lib/speech";
 import { useListen } from "../lib/useSpeech";
@@ -159,10 +160,28 @@ export function Practice({
     const slotWords = answerSlots(sentence.en, slots);
     const vocab = sentence.notes.vocab;
     const baseHints = slotWords.map((word) => localHint(word, vocab, language));
-    setHints(language === "ja" ? baseHints : withRoles(slotWords, baseHints));
+    const applyHints = (items: WordHint[]) =>
+      language === "ja" ? items : withRoles(slotWords, items);
+
+    setHints(applyHints(baseHints));
+
+    if (language === "ja" || isOfflineWordLookup()) return;
+
     let alive = true;
-    void Promise.all(slotWords.map((word) => lookupHint(word, vocab, language))).then((next) => {
-      if (alive) setHints(withRoles(slotWords, next));
+    slotWords.forEach((word, index) => {
+      void lookupHint(word, vocab, language).then((hint) => {
+        if (!alive) return;
+        setHints((prev) => {
+          const merged = [...(prev ?? baseHints)];
+          const current = merged[index];
+          merged[index] = {
+            pos: hint.pos || current?.pos || "",
+            phonetic: hint.phonetic || current?.phonetic || "",
+            zh: hint.zh || current?.zh || "",
+          };
+          return applyHints(merged);
+        });
+      });
     });
     return () => {
       alive = false;
